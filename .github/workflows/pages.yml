@@ -1,0 +1,60 @@
+name: KontorKaffe Pages
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', 'pages-preview/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: kontorkaffe-pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Prepare isolated site or safe preview
+        env:
+          PAGES_ORIGIN: ${{ steps.pages.outputs.origin }}
+          PAGES_PATH: ${{ steps.pages.outputs.base_path }}
+          EXPECTED_ORIGIN: ${{ vars.KK_SITE_ORIGIN }}
+        run: |
+          set -eu
+          mkdir -p _pages
+          if python3 -c 'import os,urllib.parse; u=urllib.parse.urlsplit(os.environ["PAGES_ORIGIN"]); assert u.scheme=="https" and u.hostname and not u.hostname.endswith(".github.io") and u.hostname!="github.io" and os.environ["PAGES_ORIGIN"]==os.environ["EXPECTED_ORIGIN"] and os.environ["PAGES_PATH"] in ("","/")'; then
+            cp -a site/. _pages/
+            echo "Dedicated HTTPS origin verified; deployment contains full site."
+          else
+            cp pages-preview/index.html _pages/
+            cp site/style.css _pages/
+            mkdir -p _pages/admin
+            cp site/admin/icon.svg _pages/admin/
+            echo "Shared or unconfirmed origin: publishing preview only; no credentials or customer code."
+          fi
+          cp site/robots.txt _pages/
+          touch _pages/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _pages
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
