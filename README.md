@@ -1,5 +1,5 @@
-# KontorKaffe
+# KontorKaffe 1.1 – byggjekandidat
 
-Sjølvstendig, privat kaffiklubb for åtte inviterte kollegaer. Byggjekandidat 1.1. Ikkje produksjonsklar før separat database, hosting og tryggleikstesting er gjennomført.
+Åtte inviterte kollegaer, personleg QR, tre klipp, fysisk godkjend nettlesar, ordresporing og bankkortformat. Ingen kundeinnlogging eller telefonløyve.
 
-Ingen kopling til andre prosjekt.
+Ikkje produksjonsklar. Krev nytt, isolert Supabase-prosjekt, konfigurert Edge Function og separat HTTPS-origin (til dømes eit nytt Cloudflare Pages-prosjekt med output `site`). Bruk aldri same nettlesarorigin som andre prosjekt. Set API i `site/config.js`. Ingen private nøklar i klienten. Verifiser database, tilgangar, push og reelle telefonar før bruk. Alle data og nøklar må vera spesifikke for KontorKaffe. Ingen kopling til andre prosjekt.

@@ -1,0 +1,3 @@
+project_id = "kontorkaffe"
+[functions.kontorkaffe]
+verify_jwt = false
