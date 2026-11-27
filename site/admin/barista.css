@@ -90,10 +90,5 @@
 .stock-grid strong{display:block;font:400 clamp(25px,7vw,38px)/1.1 Georgia,serif;color:#365d2c}
 .stock-grid>div:last-child{background:#e4eddb;border-color:#8eaa7e}
 .stock-panel p{font-size:12px;margin-bottom:0}
-.special-editor{border-top:1px solid #d8cfc0;margin-top:16px;padding-top:14px}
-.special-editor summary{cursor:pointer;font-weight:650;color:#365d2c;min-height:36px;padding:7px 0}
-.special-editor textarea{display:block;width:100%;resize:vertical;border:1px solid #c2b9a7;border-radius:12px;padding:10px;background:#fffdfa;color:#263d24;font:inherit}
-.special-editor textarea:focus-visible{outline:3px solid #3c6a30;outline-offset:2px}
-.special-editor #hideSpecial{margin-top:10px}
 @media(min-width:850px){.barista:has(#login:not([hidden])) main{margin-left:auto;margin-right:6vw;padding-top:clamp(40px,14vh,170px)}.barista main{max-width:1050px}}
 @media print{.barista .club-footer{display:none!important}}
