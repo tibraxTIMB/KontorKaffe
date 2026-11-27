@@ -72,3 +72,28 @@
 @media print{.barista main{padding:0}.barista .mast{display:none!important}}
 
 .syncbar{margin:0 0 10px;color:#5b594f}.syncbar button,.barista #soundToggle,.barista #browserPush{font-size:13px;min-height:42px}.barista #soundToggle[aria-pressed=true]{background:#e1edda;border-color:#4f7939;color:#263d24}
+
+/* Full-screen image behind the actual barista work surface. */
+.barista{background:transparent}
+.barista:has(#login:not([hidden])) main{max-width:540px;min-height:100svh;padding:clamp(120px,29vh,260px) 14px 20px}
+.barista .login-art{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.barista .login-card{background:rgba(255,253,248,.96);border-color:#f8f0de;box-shadow:0 12px 42px #1e241c50}
+.barista .login-content{background:transparent}
+.barista .club-footer{background:#273b29e8;color:#fff;border-radius:12px;padding:10px}
+.barista .club-footer:before{display:none}
+.barista .mast,.barista .worktabs{box-shadow:0 5px 16px #20271b40}
+.barista .workspace,.barista .bar-controls,.barista .stock-panel,.metrics div{background:rgba(255,253,248,.96)}
+.barista .stock-panel{margin:12px 0 0}
+.stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.stock-grid>div{border:1px solid #d8cfc0;border-radius:10px;padding:9px;background:#f6f1e8;min-width:0}
+.stock-grid span{font-size:11px;color:#4d5846;display:block;overflow-wrap:anywhere;min-height:2.8em}
+.stock-grid strong{display:block;font:400 clamp(25px,7vw,38px)/1.1 Georgia,serif;color:#365d2c}
+.stock-grid>div:last-child{background:#e4eddb;border-color:#8eaa7e}
+.stock-panel p{font-size:12px;margin-bottom:0}
+.special-editor{border-top:1px solid #d8cfc0;margin-top:16px;padding-top:14px}
+.special-editor summary{cursor:pointer;font-weight:650;color:#365d2c;min-height:36px;padding:7px 0}
+.special-editor textarea{display:block;width:100%;resize:vertical;border:1px solid #c2b9a7;border-radius:12px;padding:10px;background:#fffdfa;color:#263d24;font:inherit}
+.special-editor textarea:focus-visible{outline:3px solid #3c6a30;outline-offset:2px}
+.special-editor #hideSpecial{margin-top:10px}
+@media(min-width:850px){.barista:has(#login:not([hidden])) main{margin-left:auto;margin-right:6vw;padding-top:clamp(40px,14vh,170px)}.barista main{max-width:1050px}}
+@media print{.barista .club-footer{display:none!important}}
