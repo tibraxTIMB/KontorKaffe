@@ -46,3 +46,5 @@
 @media(max-width:360px){.barista main{padding:9px}.login-content{padding:16px}.barista .mast{padding:10px;gap:8px}.mast img{width:40px;height:40px}.barista .worktabs button{font-size:10px}}
 @media(min-width:780px){.barista main{padding:24px}.barista .login-card{max-width:500px}.login-art{height:175px}.metrics div{padding:17px}.barista .workspace{padding:22px}}
 @media print{.barista main{max-width:none;padding:0}.barista #printArea{display:grid!important}}
+
+#hostSetup{margin:12px 0 16px}#hostReady{margin:12px 0 16px;overflow-wrap:anywhere}#hostAddress{font-weight:600;margin:8px 0}
