@@ -1,0 +1,2 @@
+# KontorKaffe 2.8 – release gate
+Replace site/assets/linea-photo.webp with the approved original-image crop (941 × 667, WebP). The old 360 × 252 file is NOT approved for this release. Both customer and barista use the exact same file, in aspect-preserving cover frames, with desktop backdrop capped at 941 × 667. Browser QA rejects images below 900 × 650, verifies visible frames at mobile and 1440px desktop, and checks the desktop backdrop is not full width. Keep production 2.7 until the asset is installed and tests pass. No database changes.

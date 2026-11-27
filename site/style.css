@@ -179,3 +179,18 @@ body:not(.admin) .club-footer:before{display:none}
 @media print{body::before{display:none!important}body{background:white!important}main{min-height:0!important}}
 
 .pickup-label{margin:16px 0 6px}.pickup-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.pickup-choices button{background:#fffdf8;color:#263d24;border-color:#c7cdbb;padding:8px 3px;font:600 12px system-ui,sans-serif;min-height:44px}.pickup-choices button[aria-pressed=true]{background:#4f7939;color:white;border-color:#4f7939}.pickup-choices button:disabled{opacity:.45}.pickup-choices button:focus-visible{outline:3px solid #263d24}.menu #specialChoice{grid-column:auto}.menu #specialChoice img{object-fit:contain}
+
+/* 2.8 – same original-resolution photograph in both app surfaces. */
+body{background:#e5e0d6}
+body::before{inset:0 0 auto;position:fixed;width:100%;height:100vh;height:100svh;margin:0 auto;background:linear-gradient(120deg,rgba(30,40,23,.10),rgba(45,39,28,.22)),url('assets/linea-photo.webp?v=28') 44% 50%/cover no-repeat}
+body:not(.admin) main,body:not(.admin) main:has(#member:not([hidden])){width:100%;max-width:900px;margin:0 auto;padding:12px 14px 24px}
+body:not(.admin) .member-hero .hero-art{position:static;opacity:1;display:block;width:100%;height:auto;aspect-ratio:941/667;max-height:300px;object-fit:cover;object-position:50% 48%;pointer-events:auto}
+body:not(.admin):has(#member:not([hidden])) .member-hero .hero-art{height:clamp(165px,46vw,245px);max-height:245px;aspect-ratio:auto}
+.member-hero .hero-brand{background:rgba(255,253,248,.96)}
+@media(min-width:850px){
+ body::before{width:min(100%,941px);height:min(100svh,667px);border-radius:0 0 18px 18px}
+ body:not(.admin) main:not(:has(#member:not([hidden]))){max-width:660px;margin:0 auto;padding:22px 18px 30px}
+ body:not(.admin) main:has(#member:not([hidden])){padding:20px 20px 32px}
+ body:not(.admin) .member-hero .hero-art{max-height:390px}
+}
+@media print{body::before{display:none!important}body{background:white!important}}
