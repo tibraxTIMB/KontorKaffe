@@ -16,7 +16,7 @@ const mockFetch=async (url,opts={})=>{
  if(path==='/auth/v1/factors'&&opts.method==='POST'){assert.equal(b.factor_type,'totp');return json({id:factor,totp:{uri:'otpauth://mock',secret:'MOCK'}});}
  if(path==='/auth/v1/factors/'+factor+'/challenge')return json({id:'challenge'});
  if(path==='/auth/v1/factors/'+factor+'/verify'){assert.equal(b.challenge_id,'challenge');if(b.code!=='123456')return json({},400);verified=true;return json({access_token:token('aal2'),expires_in:3600});}
- if(path==='/rest/v1/kk_action'){rpcCalls++;return json({ok:true});}
+ if(path==='/rest/v1/rpc/kk_action'){rpcCalls++;return json({ok:true});}
  if(path==='/rest/v1/kk_push'&&opts.method==='DELETE'){deleted++;assert.equal(u.searchParams.get('endpoint'),'eq.https://fcm.googleapis.com/mock');return json({});}
  if(path==='/auth/v1/logout')return json({});
  throw Error('unexpected mock URL '+path);
