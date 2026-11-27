@@ -12,8 +12,10 @@ import android.widget.*;
 import java.net.URI;
 
 public class MainActivity extends Activity {
- private static final int GREEN=Color.rgb(32,57,45);
- private static final int PAPER=Color.rgb(244,239,229);
+ private static final int GREEN=Color.rgb(13,36,26);
+ private static final int PAPER=Color.rgb(247,231,201);
+ private static final int GOLD=Color.rgb(216,181,117);
+ private void styleButton(Button b, boolean primary){android.graphics.drawable.GradientDrawable bg=new android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TL_BR,primary?new int[]{GOLD,PAPER,GOLD}:new int[]{Color.rgb(35,65,47),GREEN});bg.setCornerRadius(14);bg.setStroke(2,GOLD);b.setBackground(bg);b.setTextColor(primary?GREEN:PAPER);b.setAllCaps(false);b.setMinHeight(56);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,12,0,0);b.setLayoutParams(lp);}
  private SharedPreferences prefs;
  private EditText input;
  private TextView status;
@@ -41,17 +43,17 @@ public class MainActivity extends Activity {
   super.onCreate(saved);
   prefs=getSharedPreferences("kontorkaffe_launcher",MODE_PRIVATE);
   getWindow().setStatusBarColor(GREEN);
-  getWindow().setNavigationBarColor(PAPER);
-  LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(32,80,32,32);box.setGravity(Gravity.CENTER_HORIZONTAL);box.setBackgroundColor(PAPER);
+  getWindow().setNavigationBarColor(GREEN);
+  LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(32,80,32,32);box.setGravity(Gravity.CENTER_HORIZONTAL);box.setBackgroundColor(GREEN);
   ImageView icon=new ImageView(this);icon.setImageResource(no.kontorkaffe.barista.R.drawable.ic_coffee);box.addView(icon,new LinearLayout.LayoutParams(160,160));
-  TextView title=new TextView(this);title.setText("KontorKaffe");title.setTextSize(32);title.setTextColor(GREEN);title.setGravity(Gravity.CENTER);box.addView(title);
-  TextView subtitle=new TextView(this);subtitle.setText("Barista · Caffè su invito");subtitle.setTextColor(GREEN);subtitle.setGravity(Gravity.CENTER);box.addView(subtitle);
-  TextView explain=new TextView(this);explain.setText("\nPrivat administratorflate. Opnar den sikre nettappen i nettlesaren, der pushvarsling og utskrift vert handterte. Første gong: legg inn den separate KontorKaffe-adressa.");explain.setTextColor(GREEN);box.addView(explain);
-  input=new EditText(this);input.setSingleLine(true);input.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_URI);input.setHint("https://di-kontorkaffe-adresse");input.setText(prefs.getString("admin_url",""));box.addView(input,new LinearLayout.LayoutParams(-1,-2));
-  Button button=new Button(this);button.setText("Lagre adresse og opne");button.setOnClickListener(v->saveAndOpen());box.addView(button,new LinearLayout.LayoutParams(-1,-2));
-  Button direct=new Button(this);direct.setText("Opne masterappen");direct.setOnClickListener(v->{String u=validated(prefs.getString("admin_url",""));if(u==null)status.setText("KontorKaffe må publiserast og adressa lagrast først.");else open(u);});box.addView(direct,new LinearLayout.LayoutParams(-1,-2));
-  Button clear=new Button(this);clear.setText("Gløym lagra adresse");clear.setOnClickListener(v->{prefs.edit().remove("admin_url").apply();input.setText("");status.setText("Adresse fjerna.");});box.addView(clear,new LinearLayout.LayoutParams(-1,-2));
-  status=new TextView(this);status.setTextColor(GREEN);box.addView(status);
+  TextView title=new TextView(this);title.setText("KontorKaffe");title.setTextSize(32);title.setTextColor(PAPER);title.setTypeface(android.graphics.Typeface.SERIF);title.setGravity(Gravity.CENTER);box.addView(title);
+  TextView subtitle=new TextView(this);subtitle.setText("Barista · Edizione Firenze · Caffè su invito");subtitle.setTextColor(GOLD);subtitle.setGravity(Gravity.CENTER);box.addView(subtitle);
+  TextView explain=new TextView(this);explain.setText("\nPrivat administratorflate. Opnar den sikre nettappen i nettlesaren, der pushvarsling og utskrift vert handterte. Første gong: legg inn den separate KontorKaffe-adressa.");explain.setTextColor(PAPER);box.addView(explain);
+  input=new EditText(this);input.setSingleLine(true);input.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_URI);input.setTextColor(PAPER);input.setHintTextColor(GOLD);input.setHint("https://di-kontorkaffe-adresse");input.setText(prefs.getString("admin_url",""));box.addView(input,new LinearLayout.LayoutParams(-1,-2));
+  Button button=new Button(this);button.setText("Lagre adresse og opne");button.setOnClickListener(v->saveAndOpen());styleButton(button,true);box.addView(button);
+  Button direct=new Button(this);direct.setText("Opne masterappen");direct.setOnClickListener(v->{String u=validated(prefs.getString("admin_url",""));if(u==null)status.setText("KontorKaffe må publiserast og adressa lagrast først.");else open(u);});styleButton(direct,false);box.addView(direct);
+  Button clear=new Button(this);clear.setText("Gløym lagra adresse");clear.setOnClickListener(v->{prefs.edit().remove("admin_url").apply();input.setText("");status.setText("Adresse fjerna.");});styleButton(clear,false);box.addView(clear);
+  status=new TextView(this);status.setTextColor(PAPER);box.addView(status);
   ScrollView scroll=new ScrollView(this);scroll.addView(box);setContentView(scroll);
  }
 }

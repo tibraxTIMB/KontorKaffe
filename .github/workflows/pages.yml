@@ -38,12 +38,18 @@ jobs:
           else
             cp pages-preview/index.html _pages/
             cp site/style.css _pages/
+            cp -a site/assets _pages/
             mkdir -p _pages/admin
             cp site/admin/icon.svg _pages/admin/
             echo "Shared or unconfirmed origin: publishing preview only; no credentials or customer code."
           fi
           cp site/robots.txt _pages/
           touch _pages/.nojekyll
+      - name: Check local design assets
+        run: |
+          test -s _pages/assets/firenze.svg
+          for drink in espresso long-black americano cortado cappuccino latte mocha kakao; do test -s "_pages/assets/$drink.svg"; done
+          if [ -f _pages/customer.js ]; then node --input-type=module --check < _pages/customer.js; node --input-type=module --check < _pages/admin/admin.js; fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _pages
