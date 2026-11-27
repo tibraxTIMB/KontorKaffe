@@ -1,0 +1,28 @@
+name: KontorKaffe live route check
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/live-route-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  routes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify dedicated public routes and API preflight
+        shell: bash
+        run: |
+          set -eu
+          base=https://kontorkaffe.github.io
+          for path in / /admin/ /admin/index.html; do
+            echo "Checking $path"
+            curl -fsSL --max-time 20 -w 'HTTP %{http_code}; final URL %{url_effective}\n' -o /tmp/page "$base$path"
+            grep -o '<title>[^<]*' /tmp/page | head -1
+            if [ "$path" = / ]; then grep -q 'id="activation"' /tmp/page; else grep -q 'Benvenuto, barista.' /tmp/page; fi
+          done
+          test "$(curl -fsS --max-time 20 "$base/kontorkaffe-verify.txt")" = kontorkaffe-rpoziaylvjhfqitfcbhm-v1
+          api=https://rpoziaylvjhfqitfcbhm.supabase.co/functions/v1/kontorkaffe
+          curl -fsS -D /tmp/headers -o /dev/null -X OPTIONS -H "Origin: $base" -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type' "$api"
+          grep -i '^access-control-allow-origin:' /tmp/headers | tr -d '\r' | grep -Fx "access-control-allow-origin: $base"
