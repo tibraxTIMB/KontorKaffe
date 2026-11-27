@@ -6,8 +6,8 @@ android {
   applicationId 'no.kontorkaffe.barista'
   minSdk 26
   targetSdk 35
-  versionCode 26
-  versionName '2.6'
+  versionCode 27
+  versionName '2.7'
  }
  sourceSets { main { assets.srcDirs += layout.buildDirectory.dir('generated/kkAssets').get().asFile } }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
@@ -20,3 +20,5 @@ tasks.register('syncKontorKaffeAssets', Sync) {
  into layout.buildDirectory.dir('generated/kkAssets/kk')
 }
 tasks.named('preBuild').configure { dependsOn tasks.named('syncKontorKaffeAssets') }
+
+dependencies { implementation 'com.google.firebase:firebase-messaging:24.1.0' }
