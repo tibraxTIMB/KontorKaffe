@@ -16,9 +16,9 @@ const mockFetch=async (url,opts={})=>{
  if(path==='/auth/v1/factors'&&opts.method==='POST'){assert.equal(b.factor_type,'totp');return json({id:factor,totp:{uri:'otpauth://mock',secret:'MOCK'}});}
  if(path==='/auth/v1/factors/'+factor+'/challenge')return json({id:'challenge'});
  if(path==='/auth/v1/factors/'+factor+'/verify'){assert.equal(b.challenge_id,'challenge');if(b.code!=='123456')return json({},400);verified=true;return json({access_token:token('aal2'),expires_in:3600});}
- if(path==='/rest/v1/rpc/kk_watch'){
+ if(path==='/rest/v1/rpc/kk_action'&&['watch_start','native_watch_state','native_watch_stop'].includes(b.a)){
   assert.match(b.p.session_hash,/^[a-f0-9]{64}$/);
-  if(b.a==='start'){watchHash=b.p.session_hash;return json({ok:true});}
+  if(b.a==='watch_start'){watchHash=b.p.session_hash;return json({ok:true});}
   if(b.a==='native_watch_stop'){if(watchHash===b.p.session_hash)watchHash='';return json({ok:true});}
   if(b.a==='native_watch_state')return json(watchHash&&watchHash===b.p.session_hash?{mode:'open',pending:['mock-order']}:{expired:true});
   throw Error('Unexpected watch action');

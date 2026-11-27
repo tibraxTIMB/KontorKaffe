@@ -13,7 +13,7 @@ const dedicatedOrigin='https://kontorkaffe.github.io';
 const baseHeaders={'Access-Control-Allow-Headers':'content-type, authorization','Access-Control-Allow-Methods':'POST, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
 
 const restHeaders={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'};
-const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_rename','admin_delete','admin_reset_browser','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push','admin_push_test','admin_push_off','admin_mfa_enroll','admin_mfa_verify','admin_watch_start','native_watch_state','native_watch_stop']);
+const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_rename','admin_delete','admin_reset_browser','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push','admin_push_test','admin_push_off','admin_mfa_enroll','admin_mfa_verify','admin_menu','admin_watch_start','native_watch_state','native_watch_stop']);
 type HostConfig={origin:string,vapid_public:string,vapid_private:string};
 function validOrigin(raw:string){try{const u=new URL(raw);return u.origin===raw&&u.protocol==='https:'&&!u.port&&!u.username&&!u.password&&(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:netlify\.app|pages\.dev|vercel\.app)$/.test(u.hostname)||/^kontorkaffe(?:-[a-z0-9]+)*\.github\.io$/.test(u.hostname));}catch{return false;}}
 async function readConfig():Promise<HostConfig|null>{
@@ -74,8 +74,8 @@ Deno.serve(async req=>{
   }
   if(['native_watch_state','native_watch_stop'].includes(action)){
    if(!native||!keyValid(p.session))return reply({error:'Ikkje tillate'},403);
-   const r=await fetch(db+'/rest/v1/rpc/kk_watch',{method:'POST',headers:restHeaders,body:JSON.stringify({a:action,p:{session_hash:await hash(p.session)}})});
-   if(!r.ok)return reply({error:'Varsling utilgjengeleg'},503);
+   const r=await fetch(db+'/rest/v1/rpc/kk_action',{method:'POST',headers:restHeaders,body:JSON.stringify({a:action,p:{session_hash:await hash(p.session)}})});
+   if(!r.ok){console.warn('KontorKaffe watch state RPC HTTP '+r.status);return reply({error:'Varsling utilgjengeleg (HTTP '+r.status+')'},503);}
    const v=await r.json();return reply(v,v.expired?410:200);
   }
   let qrToken='',mfaEnabled=false;
@@ -114,8 +114,8 @@ Deno.serve(async req=>{
    }
    if(action==='admin_watch_start'){
     if(!native)return reply({error:'Bruk Android-appen'},403);
-    const session=random();const r=await fetch(db+'/rest/v1/rpc/kk_watch',{method:'POST',headers:restHeaders,body:JSON.stringify({a:'start',p:{session_hash:await hash(session)}})});
-    if(!r.ok)return reply({error:'Klarte ikkje starta baristamodus'},503);const v=await r.json();if(!v.ok)return reply({error:'Opna kaffibaren først'},409);return reply({session,expires_in:21600});
+    const session=random();const r=await fetch(db+'/rest/v1/rpc/kk_action',{method:'POST',headers:restHeaders,body:JSON.stringify({a:'watch_start',p:{session_hash:await hash(session)}})});
+    if(!r.ok){console.warn('KontorKaffe watch start RPC HTTP '+r.status);return reply({error:'Serveren kunne ikkje starta varsling (HTTP '+r.status+'). Prøv igjen eller logg inn på nytt.'},503);}const v=await r.json();if(!v.ok)return reply({error:'Opna kaffibaren først'},409);return reply({session,expires_in:21600});
    }
    if(action==='admin_push_off'){
     if(typeof p.endpoint!=='string'||p.endpoint.length>3000)return reply({error:'Ugyldig varslingsadresse'},400);
