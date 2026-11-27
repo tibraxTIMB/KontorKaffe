@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify approved original photo bytes
+        run: echo 'b212b152f32a8388ff5dc5198d0556a3962e4de928a7411e026bf6efdb0a6f3a  site/assets/linea-photo.webp' | sha256sum -c -
       - name: Test actual Edge Function authorization logic with simulated Auth
         run: node tests/edge-auth.mjs
       - name: Install pinned browser test runner
@@ -30,3 +32,12 @@ jobs:
           trap 'kill "$SERVER" 2>/dev/null || true' EXIT
           for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8765/ >/dev/null && break; sleep 1; done
           node tests/browser-smoke.mjs
+
+      - name: Upload visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KontorKaffe-2.8-visual-QA
+          path: visual-qa/
+          if-no-files-found: ignore
+          retention-days: 7

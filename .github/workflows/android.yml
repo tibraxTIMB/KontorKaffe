@@ -22,6 +22,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Verify original photo bytes before build
+        run: echo 'b212b152f32a8388ff5dc5198d0556a3962e4de928a7411e026bf6efdb0a6f3a  site/assets/linea-photo.webp' | sha256sum -c -
       - name: Build Android test APK
         run: gradle --no-daemon -p android :app:assembleDebug
       - name: Verify embedded administration and APK
@@ -30,7 +32,8 @@ jobs:
           unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep 'assets/kk/admin/index.html'
           unzip -p android/app/build/outputs/apk/debug/app-debug.apk assets/kk/admin/index.html | grep 'BARISTA<br>2.8'
           unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep 'assets/kk/admin/barista.css'
-          unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep 'assets/kk/assets/linea-photo.webp'
+          unzip -p android/app/build/outputs/apk/debug/app-debug.apk assets/kk/assets/linea-photo.webp > /tmp/kk-embedded-photo.webp
+          echo 'b212b152f32a8388ff5dc5198d0556a3962e4de928a7411e026bf6efdb0a6f3a  /tmp/kk-embedded-photo.webp' | sha256sum -c -
           grep -q 'assets/linea-photo.webp' android/app/src/main/java/no/kontorkaffe/barista/MainActivity.java
           grep -q 'image/webp' android/app/src/main/java/no/kontorkaffe/barista/MainActivity.java
           node --input-type=module --check < site/admin/admin.js
