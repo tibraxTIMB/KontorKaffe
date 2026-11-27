@@ -13,7 +13,7 @@ const dedicatedOrigin='https://kontorkaffe.github.io';
 const baseHeaders={'Access-Control-Allow-Headers':'content-type, authorization','Access-Control-Allow-Methods':'POST, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
 
 const restHeaders={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'};
-const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_rename','admin_delete','admin_reset_browser','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push','admin_push_test']);
+const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_rename','admin_delete','admin_reset_browser','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push','admin_push_test','admin_push_off','admin_mfa_enroll','admin_mfa_verify']);
 type HostConfig={origin:string,vapid_public:string,vapid_private:string};
 function validOrigin(raw:string){try{const u=new URL(raw);return u.origin===raw&&u.protocol==='https:'&&!u.port&&!u.username&&!u.password&&(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:netlify\.app|pages\.dev|vercel\.app)$/.test(u.hostname)||/^kontorkaffe(?:-[a-z0-9]+)*\.github\.io$/.test(u.hostname));}catch{return false;}}
 async function readConfig():Promise<HostConfig|null>{
@@ -57,21 +57,60 @@ Deno.serve(async req=>{
    const response=await fetch(db+'/auth/v1/user',{headers:{...authHeaders,Authorization:'Bearer '+token}});
    if(!response.ok)return false;
    const user=await response.json();
-   return user.app_metadata?.kontorkaffe_admin===true && !!user.id;
+   return user.app_metadata?.kontorkaffe_admin===true && !!user.id ? user : null;
   };
+  const verifiedFactors=(u:any)=>(Array.isArray(u.factors)?u.factors:[]).filter((f:any)=>f.status==='verified');
+  const aal=(token:string)=>{try{const s=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(atob(s.padEnd(Math.ceil(s.length/4)*4,'='))).aal;}catch{return null;}};
+  const factorIdOK=(s:unknown)=>typeof s==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(s);
+  const authPost=(path:string,token:string,body:unknown)=>fetch(db+'/auth/v1/'+path,{method:'POST',headers:{...authHeaders,Authorization:'Bearer '+token},body:JSON.stringify(body)});
   if(action==='admin_login'){
    if(typeof p.email!=='string'||typeof p.password!=='string'||p.email.length>254||p.password.length>256)return reply({error:'Feil e-post eller passord'},401);
    const response=await fetch(db+'/auth/v1/token?grant_type=password',{method:'POST',headers:authHeaders,body:JSON.stringify({email:p.email,password:p.password})});
    if(!response.ok)return reply({error:'Feil e-post eller passord'},response.status===429?429:401);
    const session=await response.json();
-   if(!await checkAdmin(session.access_token))return reply({error:'Ingen administratortilgang'},403);
-   return reply({access_token:session.access_token,expires_in:session.expires_in});
+   const user=await checkAdmin(session.access_token);if(!user)return reply({error:'Ingen administratortilgang'},403);
+   const factors=verifiedFactors(user);
+   return reply({access_token:session.access_token,expires_in:session.expires_in,mfa_required:factors.length>0&&aal(session.access_token)!=='aal2',factor_id:factors.find((f:any)=>f.factor_type==='totp')?.id||null});
   }
-  let qrToken='';
+  let qrToken='',mfaEnabled=false;
   if(action.startsWith('admin_')){
    const auth=req.headers.get('authorization')||'';
    const token=auth.startsWith('Bearer ')?auth.slice(7):'';
-   if(!await checkAdmin(token))return reply({error:'Logg inn på nytt med administratorkontoen'},401);
+   const user=await checkAdmin(token);if(!user)return reply({error:'Logg inn på nytt med administratorkontoen'},401);
+   const verified=verifiedFactors(user);mfaEnabled=verified.length>0;
+   const needsMfa=verified.length>0&&aal(token)!=='aal2';
+   if(needsMfa&&!['admin_mfa_verify','admin_logout'].includes(action))return reply({error:'Tofaktor er nødvendig. Logg inn på nytt.'},428);
+   if(action==='admin_mfa_enroll'){
+    if(verified.length)return reply({error:'Tofaktor er allereie aktivert.'},409);
+    for(const f of (Array.isArray(user.factors)?user.factors:[])){
+     if(f.status==='unverified'&&f.factor_type==='totp'&&factorIdOK(f.id)){
+      const del=await fetch(db+'/auth/v1/factors/'+f.id,{method:'DELETE',headers:{...authHeaders,Authorization:'Bearer '+token}});
+      if(!del.ok)return reply({error:'Klarte ikkje rydda førre ufullførte oppsett.'},409);
+     }
+    }
+    const r=await authPost('factors',token,{factor_type:'totp',friendly_name:'KontorKaffe',issuer:'KontorKaffe'});
+    if(!r.ok)return reply({error:'Klarte ikkje starta tofaktoroppsett. Kontroller Auth-innstillingane.'},400);
+    const factor=await r.json();
+    if(!factorIdOK(factor.id)||typeof factor.totp?.uri!=='string'||typeof factor.totp?.secret!=='string')return reply({error:'Ufullstendig tofaktoroppsett'},502);
+    return reply({factor_id:factor.id,qr:await QRCode.toDataURL(factor.totp.uri,{width:280,margin:4}),secret:factor.totp.secret});
+   }
+   if(action==='admin_mfa_verify'){
+    if(!factorIdOK(p.factor_id)||typeof p.code!=='string'||!/^\d{6}$/.test(p.code))return reply({error:'Skriv seks siffer frå autentiseringsappen.'},400);
+    if(verified.length&&!verified.some((f:any)=>f.id===p.factor_id&&f.factor_type==='totp'))return reply({error:'Ugyldig faktor'},403);
+    const c=await authPost('factors/'+p.factor_id+'/challenge',token,{});
+    if(!c.ok)return reply({error:'Klarte ikkje starta kodekontroll. Prøv igjen.'},400);
+    const challenge=await c.json();
+    const r=await authPost('factors/'+p.factor_id+'/verify',token,{challenge_id:challenge.id,code:p.code});
+    if(!r.ok)return reply({error:'Feil eller utløpt kode. Prøv ein ny kode.'},400);
+    const session=await r.json();
+    if(!session.access_token||!await checkAdmin(session.access_token)||aal(session.access_token)!=='aal2')return reply({error:'Tofaktor kunne ikkje stadfestast. Logg inn på nytt.'},401);
+    return reply({access_token:session.access_token,expires_in:session.expires_in});
+   }
+   if(action==='admin_push_off'){
+    if(typeof p.endpoint!=='string'||p.endpoint.length>3000)return reply({error:'Ugyldig varslingsadresse'},400);
+    const r=await fetch(db+'/rest/v1/kk_push?endpoint=eq.'+encodeURIComponent(p.endpoint),{method:'DELETE',headers:restHeaders});
+    return r.ok?reply({ok:true}):reply({error:'Klarte ikkje avregistrera varsling'},502);
+   }
    if(action==='admin_logout'){await fetch(db+'/auth/v1/logout',{method:'POST',headers:{...authHeaders,Authorization:'Bearer '+token}});return reply({ok:true});}
    if(action==='admin_configure'){
     if(config)return reply({error:'Medlemsadressa er låst for å verna eksisterande QR-kort.'},409);
@@ -118,7 +157,7 @@ Deno.serve(async req=>{
   const data=await res.json();
   if(!res.ok){return reply({error:data.code==='P0001'?data.message:'Handlinga kunne ikkje gjennomførast. Kontroller opplysningane.'},400);}
   if(qrToken){const url=site+'/#'+qrToken;data.url=url;data.qr=await QRCode.toDataURL(url,{margin:4,width:400,errorCorrectionLevel:'M'});}
-  if(action==='admin_state'){data.vapid=config?.vapid_public||'';data.site_ready=siteReady;data.site_origin=site;}
+  if(action==='admin_state'){data.vapid=config?.vapid_public||'';data.site_ready=siteReady;data.site_origin=site;data.mfa_enabled=mfaEnabled;}
   if(data.notify) { try{await notify(config);}catch{} delete data.notify; }
   return reply(data);
  }catch{return reply({error:'Tenesta kunne ikkje handsama førespurnaden'},400);}
