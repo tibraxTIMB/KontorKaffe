@@ -1,5 +1,3 @@
-# KontorKaffe 1.1 – byggjekandidat
+# KontorKaffe 2.1
 
-Åtte inviterte kollegaer, personleg QR, tre klipp, fysisk godkjend nettlesar, ordresporing og bankkortformat. Ingen kundeinnlogging eller telefonløyve.
-
-Ikkje produksjonsklar. Krev nytt, isolert Supabase-prosjekt, konfigurert Edge Function og separat HTTPS-origin (til dømes eit nytt Cloudflare Pages-prosjekt med output `site`). Bruk aldri same nettlesarorigin som andre prosjekt. Set API i `site/config.js`. Ingen private nøklar i klienten. Verifiser database, tilgangar, push og reelle telefonar før bruk. Alle data og nøklar må vera spesifikke for KontorKaffe. Ingen kopling til andre prosjekt.
+Separat privat kaffiklubb: åtte QR-medlemskort, tre klipp, fysisk godkjenning, bestilling, forslag, status, henting og refusjon. Ingen kundeinnlogging. Produksjon: https://kontorkaffe.github.io/ og /admin/. Eige Supabase-prosjekt. Bevar medlemsdata og kort; ingen reset. Android har innebygd baristapanel, utskrift og ordrelyd medan appen er open. Bakgrunnsvarsling via nettlesaren sin Web Push, ikkje native push. Test-APK kan krevja ny installasjon ved ulik debug-signatur. Aldri del nøklar eller bruk andre prosjekt sin origin.

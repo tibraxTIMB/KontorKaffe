@@ -15,10 +15,11 @@ public final class MainActivity extends Activity {
  private static final String START="https://"+HOST+"/kk/admin/index.html";
  private static final String API="https://rpoziaylvjhfqitfcbhm.supabase.co/functions/v1/kontorkaffe";
  private static final Set<String> FILES=new HashSet<>(Arrays.asList(
-  "admin/index.html","admin/barista.css","admin/admin.js","admin/icon.svg","admin/manifest.webmanifest","style.css","common.js","config.js","assets/firenze.svg","assets/marble.svg"));
+  "admin/index.html","admin/barista.css","admin/admin.js","admin/icon.svg","admin/manifest.webmanifest","style.css","common.js","config.js","assets/firenze.svg","assets/marble.svg","assets/linea-photo.webp"));
  private WebView web;
+ private android.media.ToneGenerator tone;
  private WebResourceResponse blocked(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
- private String mime(String p){if(p.endsWith(".html"))return "text/html";if(p.endsWith(".js"))return "text/javascript";if(p.endsWith(".css"))return "text/css";if(p.endsWith(".svg"))return "image/svg+xml";return "application/manifest+json";}
+ private String mime(String p){if(p.endsWith(".html"))return "text/html";if(p.endsWith(".js"))return "text/javascript";if(p.endsWith(".css"))return "text/css";if(p.endsWith(".svg"))return "image/svg+xml";if(p.endsWith(".webp"))return "image/webp";return "application/manifest+json";}
  private boolean localMain(String url){return START.equals(url);}
  @Override public void onCreate(Bundle b){
   super.onCreate(b);
@@ -44,7 +45,9 @@ public final class MainActivity extends Activity {
   web.loadUrl(START);
  }
  private final class PrintBridge{
+  @JavascriptInterface public void playOrderSound(){runOnUiThread(()->{if(web==null||!localMain(web.getUrl()))return;try{if(tone==null)tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,75);tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,350);}catch(RuntimeException ignored){}});}
+  @JavascriptInterface public void openBrowserAdmin(){runOnUiThread(()->{if(web==null||!localMain(web.getUrl()))return;try{startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,android.net.Uri.parse("https://kontorkaffe.github.io/admin/")));}catch(android.content.ActivityNotFoundException ignored){}});}
   @JavascriptInterface public void printCards(){runOnUiThread(()->{if(web==null||!localMain(web.getUrl()))return;PrintManager pm=(PrintManager)getSystemService(Context.PRINT_SERVICE);if(pm!=null)pm.print("KontorKaffe medlemskort",web.createPrintDocumentAdapter("KontorKaffe medlemskort"),new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).build());});}
  }
- @Override protected void onDestroy(){if(web!=null){web.removeJavascriptInterface("KontorKaffeNative");web.destroy();web=null;}super.onDestroy();}
+ @Override protected void onDestroy(){if(tone!=null){tone.release();tone=null;}if(web!=null){web.removeJavascriptInterface("KontorKaffeNative");web.destroy();web=null;}super.onDestroy();}
 }

@@ -17,7 +17,7 @@ await context.route(api,async route=>{
  const p=req.postDataJSON();seen.push(p.action);
  let data,status=200;
  const customer=()=>({activation:approved?'approved':activation,activation_code:'abc123',name:'Testmedlem',credits,mode,order});
- const admin=()=>({site_ready:siteReady,site_origin:siteReady?'https://kontorkaffe.github.io':'',vapid:'',mode,members:[{...member,credits}],orders:order?[{...order,name:'Testmedlem'}]:[]});
+ const admin=()=>({site_ready:siteReady,site_origin:siteReady?'https://kontorkaffe.github.io':'',vapid:'',mode,members:[{...member,credits}],orders:order&&['pending','proposed','accepted','preparing','ready'].includes(order.status)?[{...order,name:'Testmedlem'}]:[]});
  switch(p.action){
  case 'state':assert.equal(p.card,card);assert.match(p.browser,/^[a-f0-9]{64}$/);data=customer();break;
  case 'activate':activation='pending';data=customer();break;
@@ -27,6 +27,7 @@ await context.route(api,async route=>{
  case 'admin_state':assert.equal(req.headers().authorization,'Bearer mock-token');data=admin();break;
  case 'admin_configure':assert.equal(p.origin,'https://kontorkaffe.github.io');siteReady=true;data={ok:true};break;
  case 'admin_mode':mode=p.mode;data={ok:true};break;
+ case 'admin_order':assert.equal(p.status,'no_show');order={...order,status:'no_show'};data={ok:true};break;
  case 'admin_logout':data={ok:true};break;
  default:throw Error('unexpected '+p.action);
  }
@@ -46,7 +47,7 @@ try{
  failLogin=false;await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await visible('#dashboard');assert.ok(await page.locator('#open').isDisabled());await widthOK();
  await page.locator('[data-tab=settingsPane]').click();await visible('#hostSetup');await page.locator('#hostOrigin').fill('https://kontorkaffe.github.io');await page.locator('#saveHost').click();await visible('#hostReady');await hidden('#hostSetup');
  await page.locator('#closed').click();await contains('#mode','Stengt');await page.locator('#open').click();await contains('#mode','Ope');
- await page.locator('[data-tab=membersPane]').click();await contains('#members','Testmedlem');await widthOK();
+ order={id:'order-ready',drink:'Latte',pickup:new Date(Date.now()-60000).toISOString(),status:'ready'};await page.locator('#refreshNow').click();await contains('#orders','Latte');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Ikkje henta'}).click();await contains('#orders','Ingen aktive bestillingar');await page.locator('[data-tab=membersPane]').click();await contains('#members','Testmedlem');await widthOK();
  await page.setViewportSize({width:1280,height:800});await widthOK();await page.locator('#logout').click();await visible('#login');await hidden('#dashboard');
  assert.deepEqual(failures,[]);console.log('PASS: customer invitation, activation, order, rescan, refund, admin login, host setup, mode, tabs, logout, layout at 360px and 1280px (mock API only).');
 }finally{await browser.close();}

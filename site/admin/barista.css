@@ -70,3 +70,5 @@
 @media(max-width:420px){.barista main{padding:10px}.barista .login-content{padding:15px 18px 20px}.barista .login-art{max-height:265px}}
 @media(min-width:780px){.barista:has(#login:not([hidden])) main{padding-top:20px}.barista .login-card{max-width:500px}.barista .login-art{max-height:300px}}
 @media print{.barista main{padding:0}.barista .mast{display:none!important}}
+
+.syncbar{margin:0 0 10px;color:#5b594f}.syncbar button,.barista #soundToggle,.barista #browserPush{font-size:13px;min-height:42px}.barista #soundToggle[aria-pressed=true]{background:#e1edda;border-color:#4f7939;color:#263d24}
