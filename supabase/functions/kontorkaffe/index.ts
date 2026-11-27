@@ -14,7 +14,7 @@ const baseHeaders={'Access-Control-Allow-Headers':'content-type, authorization',
 const restHeaders={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'};
 const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push']);
 type HostConfig={origin:string,vapid_public:string,vapid_private:string};
-function validOrigin(raw:string){try{const u=new URL(raw);return u.origin===raw&&u.protocol==='https:'&&!u.port&&!u.username&&!u.password&&/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:netlify\.app|pages\.dev|vercel\.app)$/.test(u.hostname);}catch{return false;}}
+function validOrigin(raw:string){try{const u=new URL(raw);return u.origin===raw&&u.protocol==='https:'&&!u.port&&!u.username&&!u.password&&(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:netlify\.app|pages\.dev|vercel\.app)$/.test(u.hostname)||/^kontorkaffe(?:-[a-z0-9]+)*\.github\.io$/.test(u.hostname));}catch{return false;}}
 async function readConfig():Promise<HostConfig|null>{
  const r=await fetch(db+'/rest/v1/kk_host_config?id=eq.1&select=origin,vapid_public,vapid_private',{headers:restHeaders});
  if(!r.ok)throw Error('Host config unavailable');
@@ -73,7 +73,7 @@ Deno.serve(async req=>{
    if(action==='admin_configure'){
     if(config)return reply({error:'Medlemsadressa er låst for å verna eksisterande QR-kort.'},409);
     const proposed=typeof p.origin==='string'?p.origin.trim().replace(/\/$/,''):'';
-    if(!validOrigin(proposed))return reply({error:'Bruk ei eiga HTTPS-adresse frå Netlify, Cloudflare Pages eller Vercel.'},400);
+    if(!validOrigin(proposed))return reply({error:'Bruk eit eige KontorKaffe GitHub Pages-domene eller ei separat HTTPS-adresse frå Netlify, Cloudflare Pages eller Vercel.'},400);
     let verified=false;
     try{const r=await fetch(proposed+'/kontorkaffe-verify.txt',{redirect:'error',signal:AbortSignal.timeout(5000)});verified=r.ok&&(await r.text()).trim()==='kontorkaffe-rpoziaylvjhfqitfcbhm-v1';}catch{}
     if(!verified)return reply({error:'Klarte ikkje stadfesta at adressa har den rette KontorKaffe-nettsida.'},400);

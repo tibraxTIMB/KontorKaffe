@@ -20,7 +20,10 @@ jobs:
           node --input-type=module --check < site/common.js
           test -s site/kontorkaffe-verify.txt
           mkdir -p dist
-          (cd site && zip -qr ../dist/KontorKaffe-site.zip .)
+          mkdir -p _isolated
+          cp -a site/. _isolated/
+          touch _isolated/.nojekyll
+          (cd _isolated && zip -qr ../dist/KontorKaffe-site.zip .)
       - uses: actions/upload-artifact@v4
         with:
           name: KontorKaffe-isolated-site

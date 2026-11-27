@@ -32,7 +32,7 @@ jobs:
         run: |
           set -eu
           mkdir -p _pages
-          if python3 -c 'import os,urllib.parse; u=urllib.parse.urlsplit(os.environ["PAGES_ORIGIN"]); assert u.scheme=="https" and u.hostname and not u.hostname.endswith(".github.io") and u.hostname!="github.io" and os.environ["PAGES_ORIGIN"]==os.environ["EXPECTED_ORIGIN"] and os.environ["PAGES_PATH"] in ("","/")'; then
+          if python3 -c 'import os,re,urllib.parse; u=urllib.parse.urlsplit(os.environ["PAGES_ORIGIN"]); owner=u.hostname.split(".")[0] if u.hostname else ""; dedicated=bool(re.fullmatch(r"kontorkaffe(?:-[a-z0-9]+)*\.github\.io",u.hostname or "")) and os.environ["GITHUB_REPOSITORY"].lower()==owner+"/"+owner+".github.io"; custom=bool(u.hostname and not u.hostname.endswith(".github.io") and u.hostname!="github.io" and os.environ["PAGES_ORIGIN"]==os.environ["EXPECTED_ORIGIN"]); assert u.scheme=="https" and (dedicated or custom) and os.environ["PAGES_PATH"] in ("","/")'; then
             cp -a site/. _pages/
             echo "Dedicated HTTPS origin verified; deployment contains full site."
           else
