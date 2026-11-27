@@ -118,3 +118,9 @@ body.barista{background:#e5e0d6}
 
 /* Hide the dashboard photo when the separate login or MFA panel is in use. */
 .barista:has(#mfaPane:not([hidden])) .mast{display:none}
+
+/* Match the specificity of the legacy body.admin main rules. */
+body.admin.barista main{width:100%;max-width:941px;margin-left:auto;margin-right:auto}
+body.admin.barista:has(#login:not([hidden])) main{max-width:540px}
+@media(min-width:850px){body.admin.barista:has(#login:not([hidden])) main{max-width:941px}}
+@media print{body.admin.barista main{max-width:none}}
