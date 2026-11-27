@@ -90,3 +90,40 @@ input::placeholder{color:#665b4a}
 @media(max-width:360px){.menu button{font-size:15px}.menu button small{font-size:10px}section{padding:12px}header{padding-top:16px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 @media print{body{background:white!important;color-scheme:light}main{max-width:none!important;padding:0!important}.print-card{print-color-adjust:exact;-webkit-print-color-adjust:exact}.print-card img{background:white}.club-footer{display:none}}
+
+/* Verde Linea — painted olive-green body, Firenze marble, Rosso button. */
+:root{--green:#4f7939;--forest:#294b27;--gold:#c5c8c3;--line:#b7c5ae;--paper:#fafaf7;color:#202e20;background:#e8ece4;color-scheme:light}
+body{background:radial-gradient(ellipse at 50% 0%,#d3dec9,transparent 75%),#e8ece4}
+header{background:linear-gradient(125deg,#678c48 0%,#4f7939 52%,#365b2c 100%);border:1px solid #8eac78;box-shadow:0 8px 22px #253d2526}
+header:after{border-color:#e4ebdf65}
+header:before{border-color:#e4ebdf}
+h1{color:#fffefa;text-shadow:0 1px 2px #243e24}
+header p,.edition{color:#fffefa}
+.hero-art{border-top:1px solid #d8ded3;border-bottom:3px solid #c4c9c3}
+section,.panel{background:#fafbf8;color:#202e20;border:1px solid #c4cfbf;box-shadow:0 4px 16px #263c2410}
+h2,h3,#hello{color:#294b27}
+.muted,#privacy{color:#4e5b4b}
+.clips{color:#294b27;background:#f9faf7 url('assets/marble.svg') center/cover;border-color:#aeb8aa;box-shadow:0 2px 5px #20351f12}
+#mode{border-color:#b9c5b3}
+#mode[data-mode=open]::before{background:#548632;box-shadow:none}
+#mode[data-mode=busy]::before{background:#b48324}#mode[data-mode=closed]::before{background:#747b71}
+.menu button{color:#21321f;background:#faf9f5 url('assets/marble.svg') center/cover;border:1px solid #c4c9c1;box-shadow:0 3px 6px #22391f12}
+.menu button img{border-radius:5px}
+.menu button small{color:#4f5d4b}
+.menu button[aria-pressed=true]{color:#233d20;background:#e7efde;border:2px solid #4f7939;box-shadow:0 0 0 2px #b5c9a6}
+button{background:linear-gradient(135deg,#5e8543,#436a31);color:white;border:1px solid #476b35;box-shadow:0 2px 6px #263c2420}
+button.full{background:linear-gradient(165deg,#d52728,#b5121d 70%,#a60d16);border:1px solid #9d1218;color:#fff;box-shadow:0 0 0 1px #d0d4cf,0 4px 10px #7a171b22}
+button.alt{color:#294b27;background:#f6f8f3;border-color:#9fae98}
+button.danger{color:#782d29;background:#f8efeb;border-color:#bc9991}
+button:focus-visible,input:focus-visible{outline-color:#3c6a30}
+input,select{background:#fffefa url('assets/marble.svg') center/cover;color:#21321f;border-color:#aeb8aa}
+input::placeholder{color:#596753}
+.rescan{background:#e7efde;color:#263e24;border-color:#c0cfb7}
+.error{color:#a31823}.order-status{color:#664b1e;background:#f3ecda}
+.order-status.accepted,.order-status.ready,.order-status.collected{background:#e3efdf;color:#294b27}
+.order-status.rejected,.order-status.cancelled,.order-status.expired,.order-status.no_show{background:#f6e8e5;color:#832b25}
+.club-footer,.club-footer:before{color:#4b6e39}
+.admin .panel{background:#f6f8f3}.admin .member{border-color:#c3ccbd}.admin #open:disabled,.admin #busy:disabled,.admin #closed:disabled{background:#dbe9d2;color:#294b27;border-color:#8ca77e}
+.print-card{background:#4f7939;color:#fffefa;border:.35mm solid #d3d8ce;box-shadow:inset 0 0 0 1mm #4f7939,inset 0 0 0 1.2mm #e1e6df}
+.print-card h2,.print-card .card-number{color:#fffefa}
+@media print{.print-card{background:#4f7939!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;box-shadow:inset 0 0 0 1mm #4f7939,inset 0 0 0 1.2mm #e1e6df}}

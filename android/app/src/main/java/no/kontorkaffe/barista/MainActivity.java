@@ -12,10 +12,10 @@ import android.widget.*;
 import java.net.URI;
 
 public class MainActivity extends Activity {
- private static final int GREEN=Color.rgb(13,36,26);
- private static final int PAPER=Color.rgb(247,231,201);
- private static final int GOLD=Color.rgb(216,181,117);
- private void styleButton(Button b, boolean primary){android.graphics.drawable.GradientDrawable bg=new android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TL_BR,primary?new int[]{GOLD,PAPER,GOLD}:new int[]{Color.rgb(35,65,47),GREEN});bg.setCornerRadius(14);bg.setStroke(2,GOLD);b.setBackground(bg);b.setTextColor(primary?GREEN:PAPER);b.setAllCaps(false);b.setMinHeight(56);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,12,0,0);b.setLayoutParams(lp);}
+ private static final int GREEN=Color.rgb(79,121,57);
+ private static final int PAPER=Color.rgb(255,254,250);
+ private static final int GOLD=Color.rgb(225,230,222);
+ private void styleButton(Button b, boolean primary){android.graphics.drawable.GradientDrawable bg=new android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TL_BR,primary?new int[]{Color.rgb(213,39,40),Color.rgb(166,13,22)}:new int[]{Color.rgb(94,133,67),Color.rgb(67,106,49)});bg.setCornerRadius(14);bg.setStroke(2,GOLD);b.setBackground(bg);b.setTextColor(PAPER);b.setAllCaps(false);b.setMinHeight(56);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,12,0,0);b.setLayoutParams(lp);}
  private SharedPreferences prefs;
  private EditText input;
  private TextView status;
