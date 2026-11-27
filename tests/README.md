@@ -1,0 +1,2 @@
+# Browser QA
+CI uses a local static server and a fully mocked API. It does not call the real database or create real members. The smoke test checks access gates, all eight drinks, order and refund UI, rescan, invalid/valid admin login, host setup gating, operating modes, logout, and mobile/desktop width. It is not a substitute for testing real authentication, QR codes, print or push on a physical device. The separate hosting repository and administrator account remain launch dependencies.

@@ -127,3 +127,6 @@ input::placeholder{color:#596753}
 .print-card{background:#4f7939;color:#fffefa;border:.35mm solid #d3d8ce;box-shadow:inset 0 0 0 1mm #4f7939,inset 0 0 0 1.2mm #e1e6df}
 .print-card h2,.print-card .card-number{color:#fffefa}
 @media print{.print-card{background:#4f7939!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;box-shadow:inset 0 0 0 1mm #4f7939,inset 0 0 0 1.2mm #e1e6df}}
+
+/* Avoid accidental horizontal scrolling on compact phones. */
+main,section,.panel,.grid,.row,.workspace{min-width:0}button,input{max-width:100%}.error{overflow-wrap:anywhere}#err:not(:empty){position:sticky;top:6px;z-index:3;background:#fff5f3;border:1px solid #d9aaa4;padding:10px;border-radius:8px;box-shadow:0 3px 10px #0001}.menu button small{overflow-wrap:anywhere}
