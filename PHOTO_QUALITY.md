@@ -1,2 +1,5 @@
 # KontorKaffe 2.8 – photographic quality
 The approved photograph is a 941 × 667 WebP crop directly from the original, SHA-256 b212b152f32a8388ff5dc5198d0556a3962e4de928a7411e026bf6efdb0a6f3a, Git blob 1d8724b723a74170cf3c1ec52e1b321a2d9b9c15. Both customer and barista use identical bytes. Responsive aspect-preserving cover frames, desktop backdrop capped at 941 × 667, desktop login split panel. Android packages the exact same photo. CI validates the actual asset checksum, dimensions, visible frames and desktop bounds, and captures mock-data visual QA screenshots. Production is promoted only after both APK and browser checks pass. No database or authentication changes.
+
+## 2.9 – remove duplicate photo
+The photograph appears once, inside the customer hero, barista login art or logged-in barista mast. The body background is solid and contains no image. Browser QA enumerates visible image elements and CSS pseudo-elements that use the photograph and rejects duplicates. Also tests the reported 1144 × 932 viewport. The original image bytes remain unchanged.

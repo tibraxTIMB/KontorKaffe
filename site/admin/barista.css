@@ -106,7 +106,7 @@ body.barista{background:#e5e0d6}
 .barista .login-content{background:rgba(255,253,248,.98)}
 .barista main{width:100%;max-width:941px;margin:0 auto}
 .barista .mast{position:relative;overflow:hidden}
-.barista .mast::after{content:"";display:block;position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#294b27 10%,#294b27cc 55%,#294b2740),url('../assets/linea-photo.webp?v=28') center 48%/cover no-repeat;border:0;border-radius:0;pointer-events:none}
+.barista .mast::after{content:"";display:block;position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#294b27 10%,#294b27cc 55%,#294b2740),url('../assets/linea-photo.webp?v=29') center 48%/cover no-repeat;border:0;border-radius:0;pointer-events:none}
 .barista .mast>*{position:relative;z-index:1}
 @media(min-width:850px){
  .barista:has(#login:not([hidden])) main{max-width:941px;padding:24px 18px}
@@ -115,3 +115,6 @@ body.barista{background:#e5e0d6}
  .barista #login .login-content{padding:28px 26px;align-self:center}
 }
 @media print{.barista .mast::after{display:none!important}}
+
+/* Hide the dashboard photo when the separate login or MFA panel is in use. */
+.barista:has(#mfaPane:not([hidden])) .mast{display:none}
