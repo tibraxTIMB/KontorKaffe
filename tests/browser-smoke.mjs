@@ -34,7 +34,7 @@ await context.route(api,async route=>{
 });
 async function visible(selector){await page.locator(selector).waitFor({state:'visible'});}
 async function hidden(selector){await page.locator(selector).waitFor({state:'hidden'});}
-async function contains(selector,part){await page.waitForFunction(([s,t])=>document.querySelector(s)?.textContent.includes(t),[selector,part]);}
+async function contains(selector,part){await page.locator(selector).filter({hasText:part}).waitFor({state:'visible',timeout:10000});}
 async function widthOK(){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow');}
 try{
  await page.goto(base+'/');await contains('#message','Berre for inviterte');await hidden('#member');assert.equal(seen.length,0);await widthOK();
