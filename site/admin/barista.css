@@ -96,5 +96,3 @@
 #pushStatus{padding:8px 0;margin:0;line-height:1.4}#push,#pushTest{min-height:44px}
 
 #mfaQR{display:block;max-width:100%;height:auto;margin:10px auto}#mfaSecret{overflow-wrap:anywhere;user-select:all}#mfaPane #mfaCancel{margin-top:12px}#pushOff{min-height:44px}
-
-#nativePushPanel{margin:12px 0;padding:12px;border:1px solid #c6d1ba;border-radius:12px}#nativePushPanel button{min-height:44px}
