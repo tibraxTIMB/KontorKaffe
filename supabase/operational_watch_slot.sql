@@ -1,0 +1,11 @@
+begin;
+lock table public.kk_watch_sessions in exclusive mode;
+delete from public.kk_watch_sessions where expires_at<=now();
+do $guard$ begin if (select count(*) from public.kk_watch_sessions)>1 then raise exception 'Multiple active watch sessions; abort migration';end if;end $guard$;
+alter table public.kk_watch_sessions add column if not exists slot integer not null default 1 check(slot=1);
+create unique index if not exists kk_watch_single_slot on public.kk_watch_sessions(slot);
+revoke all on table public.kk_watch_sessions from anon,authenticated;
+grant select,insert,update,delete on table public.kk_watch_sessions to service_role;
+alter table public.kk_watch_sessions enable row level security;
+notify pgrst,'reload schema';
+commit;
