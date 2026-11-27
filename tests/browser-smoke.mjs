@@ -37,12 +37,12 @@ async function hidden(selector){await page.locator(selector).waitFor({state:'hid
 async function contains(selector,part){await page.locator(selector).filter({hasText:part}).waitFor({state:'visible',timeout:10000});}
 async function widthOK(){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow');}
 try{
- await page.goto(base+'/');await contains('#message','Berre for inviterte');await hidden('#member');assert.equal(seen.length,0);await widthOK();
+ await page.goto(base+'/');await contains('#message','Berre for inviterte');await hidden('#member');assert.ok(await page.locator('.hero-art').evaluate(i=>i.complete&&i.naturalWidth>0));assert.equal(seen.length,0);await widthOK();
  await page.goto(base+'/#'+card);await visible('#activation');await page.locator('#activate').click();await contains('#message','abc123');
  approved=true;await page.reload();await visible('#form');assert.equal(await page.locator('#menu button').count(),8);assert.equal(await page.locator('input[type=email],input[type=password]').count(),0);await widthOK();
  await page.locator('#menu button').first().click();await page.locator('#send').click();await contains('#order','Bestillinga er motteken');await contains('#clips','2 / 3');await hidden('#form');
  await page.reload();await contains('#order','Bestillinga er motteken');await page.getByRole('button',{name:'Avbestill'}).click();await contains('#clips','3 / 3');await visible('#form');
- await page.goto(base+'/admin/');await visible('#login');await page.locator('#email').fill('test@example.invalid');await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await contains('#err','Feil e-post');await hidden('#dashboard');
+ await page.goto(base+'/admin/');await visible('#login');assert.ok(await page.locator('.login-art img').evaluate(i=>i.complete&&i.naturalWidth>0));await page.locator('#email').fill('test@example.invalid');await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await contains('#err','Feil e-post');await hidden('#dashboard');
  failLogin=false;await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await visible('#dashboard');assert.ok(await page.locator('#open').isDisabled());await widthOK();
  await page.locator('[data-tab=settingsPane]').click();await visible('#hostSetup');await page.locator('#hostOrigin').fill('https://kontorkaffe.github.io');await page.locator('#saveHost').click();await visible('#hostReady');await hidden('#hostSetup');
  await page.locator('#closed').click();await contains('#mode','Stengt');await page.locator('#open').click();await contains('#mode','Ope');

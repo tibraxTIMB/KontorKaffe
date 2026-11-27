@@ -20,7 +20,7 @@ jobs:
             echo "Checking $path"
             curl -fsSL --max-time 20 -w 'HTTP %{http_code}; final URL %{url_effective}\n' -o /tmp/page "$base$path"
             grep -o '<title>[^<]*' /tmp/page | head -1
-            if [ "$path" = / ]; then grep -q 'id="activation"' /tmp/page; else grep -q 'Benvenuto, barista.' /tmp/page; fi
+            if [ "$path" = / ]; then grep -q 'id="activation"' /tmp/page; else grep -q 'id="loginForm"' /tmp/page; fi
           done
           test "$(curl -fsS --max-time 20 "$base/kontorkaffe-verify.txt")" = kontorkaffe-rpoziaylvjhfqitfcbhm-v1
           api=https://rpoziaylvjhfqitfcbhm.supabase.co/functions/v1/kontorkaffe

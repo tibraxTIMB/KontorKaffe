@@ -48,3 +48,25 @@
 @media print{.barista main{max-width:none;padding:0}.barista #printArea{display:grid!important}}
 
 #hostSetup{margin:12px 0 16px}#hostReady{margin:12px 0 16px;overflow-wrap:anywhere}#hostAddress{font-weight:600;margin:8px 0}
+
+/* 2.0 – responsive real controls, with the approved hero image. */
+.barista{background:radial-gradient(ellipse at 50% 0%,#e8e0d0,transparent 75%),#f2ede4;color:#263d24}
+.barista:has(#login:not([hidden])) .mast{display:none}
+.barista .login-card{max-width:520px;margin:0 auto 16px;border:1px solid #d8cfc0;border-radius:22px;box-shadow:0 6px 25px #4a3c2419;background:#fbf8f1}
+.barista .login-art{height:auto;aspect-ratio:10/7;max-height:350px;border:0;background:#4f7939}
+.barista .login-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.barista .login-content{padding:18px 24px 25px;background:radial-gradient(ellipse at top,#fffdf8,#f1eadd)}
+.barista .login-brand{padding:0 0 12px;background:none}
+.barista .login-brand h2{font:400 clamp(37px,9vw,52px)/1 Georgia,serif;letter-spacing:-.055em;color:#263d24;margin:0}
+.barista .login-heading{text-align:center;color:#5b594f;font-size:13px;margin:0 0 14px}
+.barista label{font-weight:600;font-size:13px;color:#3c4935;margin:10px 0 5px}
+.barista input{border-color:#c2b9a7;border-radius:12px;background:#fffdfa;min-height:48px}
+.barista button.full{border-radius:999px;min-height:52px;background:linear-gradient(150deg,#c51d25,#a80f19);font:650 16px system-ui,sans-serif}
+.barista .mast{background:linear-gradient(125deg,#5b8042,#456536);border-color:#668453}
+.barista section,.metrics div{background:#fffdf8;border-color:#d8cfc0}
+.barista .bar-controls{background:#fffdf8}
+.barista .workspace{background:#fffdf8}
+.barista .club-footer{font:12px system-ui,sans-serif;letter-spacing:0;color:#74654d}
+@media(max-width:420px){.barista main{padding:10px}.barista .login-content{padding:15px 18px 20px}.barista .login-art{max-height:265px}}
+@media(min-width:780px){.barista:has(#login:not([hidden])) main{padding-top:20px}.barista .login-card{max-width:500px}.barista .login-art{max-height:300px}}
+@media print{.barista main{padding:0}.barista .mast{display:none!important}}

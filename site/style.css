@@ -130,3 +130,29 @@ input::placeholder{color:#596753}
 
 /* Avoid accidental horizontal scrolling on compact phones. */
 main,section,.panel,.grid,.row,.workspace{min-width:0}button,input{max-width:100%}.error{overflow-wrap:anywhere}#err:not(:empty){position:sticky;top:6px;z-index:3;background:#fff5f3;border:1px solid #d9aaa4;padding:10px;border-radius:8px;box-shadow:0 3px 10px #0001}.menu button small{overflow-wrap:anywhere}
+
+/* 2.0 – a photographic, quiet coffee-club identity. */
+:root{--green:#4f7939;--forest:#263d24;--gold:#a88b61;--line:#d8cfc0;--paper:#fffdf8;color:#293627;background:#f2ede4}
+body{background:radial-gradient(ellipse at 50% 0%,#e6dfd0,transparent 70%),#f2ede4}
+body:not(.admin) main{max-width:740px;padding:12px 12px 32px}
+.member-hero{padding:0;background:#f9f5ed;border:1px solid #d7cdbc;border-radius:22px;box-shadow:0 6px 22px #3c362516;color:#263d24}
+.member-hero:before,.member-hero:after{display:none}
+.member-hero .hero-art{margin:0;display:block;width:100%;height:clamp(210px,65vw,360px);max-height:none;object-fit:cover;object-position:center 48%;border:0}
+.hero-brand,.login-brand{text-align:center;padding:18px 12px 20px;background:radial-gradient(ellipse at top,#fffdf9,#eee7d9)}
+.coffee-mark{display:block;margin:0 auto 6px;color:#4f7939;font:24px/1.1 Georgia,serif}
+.member-hero h1{color:#263d24;font:400 clamp(34px,8vw,54px)/1 Georgia,serif;letter-spacing:-.045em;text-shadow:none}
+.member-hero p.brand-hint,.brand-hint{color:#78674b;font:italic 15px/1.3 Georgia,serif;letter-spacing:.07em;margin:7px 0 0}
+body:not(.admin):has(#member:not([hidden])) .member-hero .hero-art{height:clamp(110px,33vw,180px)}
+body:not(.admin):has(#member:not([hidden])) .hero-brand{padding:10px 10px 12px}
+body:not(.admin):has(#member:not([hidden])) .coffee-mark{display:none}
+body:not(.admin):has(#member:not([hidden])) .member-hero h1{font-size:32px}
+section,.panel{background:#fffdf8;border-color:#d8cfc0;border-radius:16px;box-shadow:0 3px 14px #493b2610}
+button.full{border-radius:999px;background:linear-gradient(150deg,#c51d25,#a80f19);border-color:#a3161c;font:650 16px system-ui,sans-serif;box-shadow:0 3px 10px #811b211c}
+input,select{background:#fffdfa;border:1px solid #c5bda9;border-radius:11px;min-height:48px}
+.menu button{background:#fffdf8;border-color:#d6cdbf;color:#283a24;border-radius:13px}
+.menu button[aria-pressed=true]{background:#e3ebdb;border-color:#4f7939;color:#263d24}
+.clips{background:#edf1e7;border-color:#c6d1ba}
+.club-footer{color:#74654d;font:12px system-ui,sans-serif;letter-spacing:0}
+.club-footer:before{color:#a88b61}
+@media(min-width:760px){body:not(.admin) main{padding:24px 18px 40px}.member-hero .hero-art{height:340px}}
+@media print{body{background:#fff!important}}

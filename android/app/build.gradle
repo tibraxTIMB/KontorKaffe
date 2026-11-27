@@ -6,8 +6,8 @@ android {
   applicationId 'no.kontorkaffe.barista'
   minSdk 26
   targetSdk 35
-  versionCode 19
-  versionName '1.9'
+  versionCode 20
+  versionName '2.0'
  }
  sourceSets { main { assets.srcDirs += layout.buildDirectory.dir('generated/kkAssets').get().asFile } }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
@@ -15,7 +15,7 @@ android {
 
 tasks.register('syncKontorKaffeAssets', Sync) {
  from(rootProject.file('../site')) {
-  include 'admin/index.html','admin/barista.css','admin/admin.js','admin/icon.svg','admin/manifest.webmanifest','style.css','common.js','config.js','assets/firenze.svg','assets/marble.svg'
+  include 'admin/index.html','admin/barista.css','admin/admin.js','admin/icon.svg','admin/manifest.webmanifest','style.css','common.js','config.js','assets/firenze.svg','assets/marble.svg','assets/linea-photo.webp'
  }
  into layout.buildDirectory.dir('generated/kkAssets/kk')
 }
