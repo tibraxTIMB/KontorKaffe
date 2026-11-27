@@ -92,3 +92,5 @@
 .stock-panel p{font-size:12px;margin-bottom:0}
 @media(min-width:850px){.barista:has(#login:not([hidden])) main{margin-left:auto;margin-right:6vw;padding-top:clamp(40px,14vh,170px)}.barista main{max-width:1050px}}
 @media print{.barista .club-footer{display:none!important}}
+
+#pushStatus{padding:8px 0;margin:0;line-height:1.4}#push,#pushTest{min-height:44px}
