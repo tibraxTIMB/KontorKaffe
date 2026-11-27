@@ -9,6 +9,7 @@ const random = () => Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.
 const keyValid = (s: unknown): s is string => typeof s==='string' && /^[a-f0-9]{64}$/.test(s);
 const same = async (a: string,b: string) => { const x=await hash(a), y=await hash(b); let d=0; for(let i=0;i<x.length;i++)d|=x.charCodeAt(i)^y.charCodeAt(i);return d===0; };
 const nativeOrigin='https://appassets.androidplatform.net';
+const dedicatedOrigin='https://kontorkaffe.github.io';
 const baseHeaders={'Access-Control-Allow-Headers':'content-type, authorization','Access-Control-Allow-Methods':'POST, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
 
 const restHeaders={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'};
@@ -37,7 +38,9 @@ Deno.serve(async req=>{
  if(native||validOrigin(requestOrigin)){try{config=await readConfig();}catch{const h={...baseHeaders,...(native?{'Access-Control-Allow-Origin':nativeOrigin}:{})};return new Response(JSON.stringify({error:'Servertilkopling manglar'}),{status:503,headers:h});}}
  const site=config?.origin||'';
  const siteReady=!!config&&validOrigin(site);
- const trusted=native||(siteReady&&requestOrigin===site);
+ // Permit only the dedicated origin to bootstrap administrator login before configuration.
+ const bootstrap=!config&&requestOrigin===dedicatedOrigin;
+ const trusted=native||bootstrap||(siteReady&&requestOrigin===site);
  const headers={...baseHeaders,...(trusted?{'Access-Control-Allow-Origin':requestOrigin}:{})};
  const reply=(v:unknown,status=200)=>new Response(JSON.stringify(v),{status,headers});
  if(!trusted)return reply({error:'Ikkje tillate'},403);
@@ -47,7 +50,7 @@ Deno.serve(async req=>{
  try{
   const raw=await req.text(); if(raw.length>12000)return reply({error:'For stor førespurnad'},413);
   const {action,...p}=JSON.parse(raw); if(!allowed.has(action))return reply({error:'Ukjend handling'},400);
-  if(native&&!action.startsWith('admin_'))return reply({error:'Ikkje tillate'},403);
+  if((native||bootstrap)&&!action.startsWith('admin_'))return reply({error:'Ikkje tillate'},403);
   const authHeaders={apikey:authKey,'Content-Type':'application/json'};
   const checkAdmin=async(token:string)=>{
    if(!token||token.length>8000)return false;
@@ -73,6 +76,7 @@ Deno.serve(async req=>{
    if(action==='admin_configure'){
     if(config)return reply({error:'Medlemsadressa er låst for å verna eksisterande QR-kort.'},409);
     const proposed=typeof p.origin==='string'?p.origin.trim().replace(/\/$/,''):'';
+    if(bootstrap&&proposed!==dedicatedOrigin)return reply({error:'Bruk den faste KontorKaffe-adressa.'},400);
     if(!validOrigin(proposed))return reply({error:'Bruk eit eige KontorKaffe GitHub Pages-domene eller ei separat HTTPS-adresse frå Netlify, Cloudflare Pages eller Vercel.'},400);
     let verified=false;
     try{const r=await fetch(proposed+'/kontorkaffe-verify.txt',{redirect:'error',signal:AbortSignal.timeout(5000)});verified=r.ok&&(await r.text()).trim()==='kontorkaffe-rpoziaylvjhfqitfcbhm-v1';}catch{}
