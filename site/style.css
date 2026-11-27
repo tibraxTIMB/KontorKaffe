@@ -177,3 +177,5 @@ body:not(.admin) .club-footer:before{display:none}
 .menu .special-choice:disabled{opacity:.65;cursor:default}
 @media(min-width:850px){body:not(.admin) main:not(:has(#member:not([hidden]))){max-width:520px;margin-left:auto;margin-right:6vw;padding-top:clamp(130px,33vh,320px)}}
 @media print{body::before{display:none!important}body{background:white!important}main{min-height:0!important}}
+
+.pickup-label{margin:16px 0 6px}.pickup-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.pickup-choices button{background:#fffdf8;color:#263d24;border-color:#c7cdbb;padding:8px 3px;font:600 12px system-ui,sans-serif;min-height:44px}.pickup-choices button[aria-pressed=true]{background:#4f7939;color:white;border-color:#4f7939}.pickup-choices button:disabled{opacity:.45}.pickup-choices button:focus-visible{outline:3px solid #263d24}.menu #specialChoice{grid-column:auto}.menu #specialChoice img{object-fit:contain}
