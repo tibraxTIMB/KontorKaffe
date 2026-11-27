@@ -31,6 +31,14 @@ async function notify(config:HostConfig|null){
   catch(e:any){if([404,410].includes(e.statusCode))await fetch(db+'/rest/v1/kk_push?endpoint=eq.'+encodeURIComponent(row.endpoint),{method:'DELETE',headers:restHeaders});}
  }));
 }
+// Native watch needs only one short-lived opaque capability, the bar mode and pending order IDs.
+async function watchRest(resource:string,method='GET',body?:unknown,prefer?:string){
+ const r=await fetch(db+'/rest/v1/'+resource,{method,headers:{...restHeaders,...(prefer?{Prefer:prefer}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ if(!r.ok){let code='unknown';try{const data=await r.json();if(typeof data.code==='string'&&/^[A-Z0-9_]{1,16}$/.test(data.code))code=data.code;}catch{}console.warn('KontorKaffe watch REST '+method+' '+resource.split('?')[0]+' HTTP '+r.status+' code '+code);throw Error('Watch REST unavailable');}
+ return method==='GET'?await r.json():null;
+}
+async function watchMode(){const rows=await watchRest('kk_settings?id=eq.1&select=mode');const mode=rows?.[0]?.mode;if(!['open','busy','closed'].includes(mode))throw Error('Watch mode unavailable');return mode;}
+async function watchStop(h:string){await watchRest('kk_watch_sessions?session_hash=eq.'+h,'DELETE',undefined,'return=minimal');}
 Deno.serve(async req=>{
  const requestOrigin=req.headers.get('origin')||'';
  const native=requestOrigin===nativeOrigin;
@@ -74,9 +82,17 @@ Deno.serve(async req=>{
   }
   if(['native_watch_state','native_watch_stop'].includes(action)){
    if(!native||!keyValid(p.session))return reply({error:'Ikkje tillate'},403);
-   const r=await fetch(db+'/rest/v1/rpc/kk_action',{method:'POST',headers:restHeaders,body:JSON.stringify({a:action,p:{session_hash:await hash(p.session)}})});
-   if(!r.ok){console.warn('KontorKaffe watch state RPC HTTP '+r.status);return reply({error:'Varsling utilgjengeleg (HTTP '+r.status+')'},503);}
-   const v=await r.json();return reply(v,v.expired?410:200);
+   try{
+    const h=await hash(p.session);
+    if(action==='native_watch_stop'){await watchStop(h);return reply({ok:true});}
+    const rows=await watchRest('kk_watch_sessions?session_hash=eq.'+h+'&expires_at=gt.'+encodeURIComponent(new Date().toISOString())+'&select=slot&limit=1');
+    if(!Array.isArray(rows)||rows.length===0)return reply({expired:true},410);
+    const mode=await watchMode();
+    if(mode==='closed'){await watchStop(h);return reply({mode,pending:[]});}
+    const orders=await watchRest('kk_orders?status=eq.pending&pickup=gt.'+encodeURIComponent(new Date().toISOString())+'&select=id');
+    if(!Array.isArray(orders)||orders.some((o:any)=>typeof o.id!=='string'))throw Error('Watch orders unavailable');
+    return reply({mode,pending:orders.map((o:any)=>o.id)});
+   }catch{return reply({error:'Varsling utilgjengeleg. Prøver igjen.'},503);}
   }
   let qrToken='',mfaEnabled=false;
   if(action.startsWith('admin_')){
@@ -114,8 +130,12 @@ Deno.serve(async req=>{
    }
    if(action==='admin_watch_start'){
     if(!native)return reply({error:'Bruk Android-appen'},403);
-    const session=random();const r=await fetch(db+'/rest/v1/rpc/kk_action',{method:'POST',headers:restHeaders,body:JSON.stringify({a:'watch_start',p:{session_hash:await hash(session)}})});
-    if(!r.ok){console.warn('KontorKaffe watch start RPC HTTP '+r.status);return reply({error:'Serveren kunne ikkje starta varsling (HTTP '+r.status+'). Prøv igjen eller logg inn på nytt.'},503);}const v=await r.json();if(!v.ok)return reply({error:'Opna kaffibaren først'},409);return reply({session,expires_in:21600});
+    try{
+     if(await watchMode()==='closed')return reply({error:'Opna kaffibaren først'},409);
+     const session=random(),h=await hash(session);
+     await watchRest('kk_watch_sessions?on_conflict=slot','POST',{slot:1,session_hash:h,expires_at:new Date(Date.now()+21600000).toISOString()},'resolution=merge-duplicates,return=minimal');
+     return reply({session,expires_in:21600});
+    }catch{return reply({error:'Serveren kunne ikkje starta varsling. Prøv igjen.'},503);}
    }
    if(action==='admin_push_off'){
     if(typeof p.endpoint!=='string'||p.endpoint.length>3000)return reply({error:'Ugyldig varslingsadresse'},400);
