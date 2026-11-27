@@ -1,5 +1,7 @@
 import {$,el,api,random,time,dateInput,labels,button} from './common.js';
-const card=location.hash.slice(1);let browser='',selected='',busy=false,requestId='',requestPayload=null,current=null;
+const card=location.hash.slice(1);
+// A scan can reuse the current browser tab; never retain the old card session.
+window.addEventListener('hashchange',()=>location.reload());let browser='',selected='',busy=false,requestId='',requestPayload=null,current=null;
 const valid=/^[a-f0-9]{64}$/;const active=['pending','proposed','accepted','preparing','ready'];
 const drinks=[['Espresso','Kort og kraftig'],['Long Black','Vatn, så espresso'],['Americano','Espresso med vatn'],['Cortado','Espresso og litt mjølk'],['Cappuccino','Mjølk og skum'],['Latte','Mjuk og mjølkerik'],['Mocha','Kaffi og sjokolade'],['Kakao','Varm sjokolade']];
 function credentials(){return {card,browser};}
