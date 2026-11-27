@@ -17,7 +17,7 @@ public final class MainActivity extends Activity {
  private static final Set<String> FILES=new HashSet<>(Arrays.asList(
   "admin/index.html","admin/barista.css","admin/admin.js","admin/icon.svg","admin/manifest.webmanifest","style.css","common.js","config.js","assets/firenze.svg","assets/marble.svg","assets/linea-photo.webp"));
  private WebView web;
- private static final int WATCH_PERMISSION=702;
+ private static final int WATCH_PERMISSION=702, EXISTING_PDF=703;
  private String pendingWatch="",watchError="";
  private void launchWatch(String token){try{android.content.Intent i=new android.content.Intent(this,BaristaWatchService.class).putExtra("session",token);startForegroundService(i);}catch(RuntimeException e){watchError="Android tillèt ikkje oppstart. Opna appen og prøv igjen.";}}
  @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==WATCH_PERMISSION){String token=pendingWatch;pendingWatch="";if(g.length>0&&g[0]==android.content.pm.PackageManager.PERMISSION_GRANTED&&!token.isEmpty())launchWatch(token);else watchError="Du må tillata varsling på telefonen.";}}
@@ -48,7 +48,37 @@ public final class MainActivity extends Activity {
   web.setOnApplyWindowInsetsListener((v,insets)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.ime());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);}else{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());}return insets;});
   web.loadUrl(START);
  }
+ private void toast(String s){android.widget.Toast.makeText(this,s,android.widget.Toast.LENGTH_LONG).show();}
+ @Override protected void onActivityResult(int request,int result,android.content.Intent data){
+  super.onActivityResult(request,result,data);
+  if(request!=EXISTING_PDF||result!=RESULT_OK||data==null||data.getData()==null||web==null||!localMain(web.getUrl()))return;
+  android.net.Uri uri=data.getData();
+  // Read the chosen document privately, never upload it or grant WebView content access.
+  byte[] pdf;
+  try(InputStream in=getContentResolver().openInputStream(uri);ByteArrayOutputStream out=new ByteArrayOutputStream()){
+   if(in==null)throw new IOException("No document");
+   byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){out.write(b,0,n);if(out.size()>5*1024*1024)throw new IOException("Too large");}
+   pdf=out.toByteArray();if(pdf.length<5||!new String(pdf,0,5,java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-"))throw new IOException("Not PDF");
+  }catch(Exception e){toast("Vel eit gyldig PDF-kortark under 5 MB.");return;}
+  // Check the selected local PDF is a single A4-sized page using Android's PDF renderer.
+  File tmp=null;
+  try{tmp=File.createTempFile("kk-print-", ".pdf", getCacheDir());try(FileOutputStream out=new FileOutputStream(tmp)){out.write(pdf);}
+   try(android.graphics.pdf.PdfRenderer renderer=new android.graphics.pdf.PdfRenderer(android.os.ParcelFileDescriptor.open(tmp,android.os.ParcelFileDescriptor.MODE_READ_ONLY))){if(renderer.getPageCount()!=1)throw new IOException("One page required");try(android.graphics.pdf.PdfRenderer.Page page=renderer.openPage(0)){if(Math.abs(page.getWidth()-595)>12||Math.abs(page.getHeight()-842)>12)throw new IOException("A4 required");}}
+  }catch(Exception e){toast("Kortarket må vera éi ståande A4-side.");return;}finally{if(tmp!=null)tmp.delete();}
+  PrintManager pm=(PrintManager)getSystemService(Context.PRINT_SERVICE);if(pm==null){toast("Utskrift er ikkje tilgjengeleg.");return;}
+  pm.print("KontorKaffe – eksisterande kortark",new android.print.PrintDocumentAdapter(){
+   @Override public void onLayout(PrintAttributes oldA,PrintAttributes newA,android.os.CancellationSignal cancel,LayoutResultCallback cb,Bundle extras){
+    if(cancel.isCanceled()){cb.onLayoutCancelled();return;}cb.onLayoutFinished(new android.print.PrintDocumentInfo.Builder("KontorKaffe_medlemskort.pdf").setContentType(android.print.PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).setPageCount(1).build(),true);
+   }
+   @Override public void onWrite(android.print.PageRange[] pages,android.os.ParcelFileDescriptor destination,android.os.CancellationSignal cancel,WriteResultCallback cb){
+    if(cancel.isCanceled()){cb.onWriteCancelled();return;}try(FileOutputStream out=new FileOutputStream(destination.getFileDescriptor())){out.write(pdf);out.flush();if(cancel.isCanceled())cb.onWriteCancelled();else cb.onWriteFinished(new android.print.PageRange[]{new android.print.PageRange(0,0)});}catch(IOException e){cb.onWriteFailed("Klarte ikkje skriva kortarket.");}
+   }
+   @Override public void onFinish(){java.util.Arrays.fill(pdf,(byte)0);}
+  },new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).build());
+ }
  private final class PrintBridge{
+  @JavascriptInterface public void printExistingPdf(){runOnUiThread(()->{if(web==null||!localMain(web.getUrl()))return;try{android.content.Intent pick=new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).setType("application/pdf").addCategory(android.content.Intent.CATEGORY_OPENABLE);startActivityForResult(pick,EXISTING_PDF);}catch(android.content.ActivityNotFoundException e){toast("Ingen dokumentveljar tilgjengeleg.");}});}
+
   @JavascriptInterface public void startBaristaWatch(String token){runOnUiThread(()->{if(web==null||!localMain(web.getUrl())||!token.matches("[a-f0-9]{64}"))return;watchError="";if(android.os.Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED){pendingWatch=token;requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},WATCH_PERMISSION);}else if(!getSystemService(android.app.NotificationManager.class).areNotificationsEnabled())watchError="Varsling er slått av i Android.";else launchWatch(token);});}
   @JavascriptInterface public String baristaWatchState(){try{return new org.json.JSONObject().put("running",BaristaWatchService.running).put("status",watchError.isEmpty()?BaristaWatchService.status:watchError).put("lastSuccess",BaristaWatchService.lastSuccess).toString();}catch(Exception e){return "{}";}}
   @JavascriptInterface public void stopBaristaWatch(){runOnUiThread(()->{pendingWatch="";watchError="";if(BaristaWatchService.running)startService(new android.content.Intent(MainActivity.this,BaristaWatchService.class).setAction("stop"));});}

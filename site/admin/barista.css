@@ -124,3 +124,5 @@ body.admin.barista main{width:100%;max-width:941px;margin-left:auto;margin-right
 body.admin.barista:has(#login:not([hidden])) main{max-width:540px}
 @media(min-width:850px){body.admin.barista:has(#login:not([hidden])) main{max-width:941px}}
 @media print{body.admin.barista main{max-width:none}}
+
+.card-print-options p{font-size:13px;line-height:1.5}.card-print-options hr{border:0;border-top:1px solid #d8cfc0;margin:16px 0}.card-print-options #openExistingPdf{display:block;margin:12px 0;padding:12px;color:#294b27;font-weight:650;background:#e4eddb;border-radius:9px;text-align:center}.card-print-options #printExisting{width:100%;min-height:48px}
