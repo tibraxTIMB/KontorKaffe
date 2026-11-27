@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.kk_action(a text, p jsonb)
  LANGUAGE plpgsql
  SET search_path TO ''
 AS $function$
-declare m public.kk_members%rowtype; o public.kk_orders%rowtype; t timestamptz; k text; result jsonb; mode_now text; mid integer; n integer; fresh boolean:=false; special jsonb; nickname text; unavailable text[]; allowed_drinks constant text[]:=array['Espresso','Long Black','Americano','Cortado','Cappuccino','Latte','Mocha','Kakao','Dagens spesial'];
+declare m public.kk_members%rowtype; o public.kk_orders%rowtype; t timestamptz; k text; result jsonb; mode_now text; mid integer; n integer; fresh boolean:=false; special jsonb; v_nickname text; unavailable text[]; allowed_drinks constant text[]:=array['Espresso','Long Black','Americano','Cortado','Cappuccino','Latte','Mocha','Kakao','Dagens spesial'];
 begin
  if a in ('watch_start','native_watch_state','native_watch_stop') then return public.kk_watch(case when a='watch_start' then 'start' else a end,p); end if;
  perform pg_catalog.pg_advisory_xact_lock(790221);
@@ -88,9 +88,9 @@ begin
    if exists(select 1 from public.kk_orders where member_id=m.id and status in ('pending','proposed','accepted','preparing','ready')) then raise exception 'Du har allereie ei aktiv bestilling'; end if;
    t=(p->>'pickup')::timestamptz;
    if t<=now() or t>now()+interval '24 hours' or (mode_now='busy' and t<now()+interval '30 minutes') then raise exception 'Vel eit seinare hentetidspunkt'; end if;
-   nickname=case when p ? 'nickname' then btrim(p->>'nickname') else coalesce(nullif(btrim(m.name),''),'KK-'||lpad(m.id::text,3,'0')) end;
-   if nickname is null or char_length(nickname)<1 or char_length(nickname)>30 or nickname ~ '[[:cntrl:]]' then raise exception 'Skriv eit kallenamn på 1–30 teikn'; end if;
-   insert into public.kk_orders(member_id,drink,pickup,request_id,nickname) values(m.id,p->>'drink',t,(p->>'request_id')::uuid,nickname) returning * into o;
+   v_nickname=case when p ? 'nickname' then btrim(p->>'nickname') else coalesce(nullif(btrim(m.name),''),'KK-'||lpad(m.id::text,3,'0')) end;
+   if v_nickname is null or char_length(v_nickname)<1 or char_length(v_nickname)>30 or v_nickname ~ '[[:cntrl:]]' then raise exception 'Skriv eit kallenamn på 1–30 teikn'; end if;
+   insert into public.kk_orders(member_id,drink,pickup,request_id,nickname) values(m.id,p->>'drink',t,(p->>'request_id')::uuid,v_nickname) returning * into o;
    update public.kk_members set credits=credits-1 where id=m.id returning * into m;
    fresh=true;
   end if;
