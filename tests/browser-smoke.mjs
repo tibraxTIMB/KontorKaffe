@@ -8,7 +8,7 @@ page.on('pageerror',e=>failures.push(e.message));
 const base='http://127.0.0.1:8765';
 const api='https://rpoziaylvjhfqitfcbhm.supabase.co/functions/v1/kontorkaffe';
 const card='a'.repeat(64);
-let approved=false,activation='required',order=null,credits=3,mode='open',siteReady=false,failLogin=true,seen=[];
+let approved=false,activation='required',order=null,credits=3,mode='open',siteReady=false,failLogin=true,seen=[],mfaEnabled=false,mfaVerified=false;
 const member={id:1,name:'Testmedlem',active:true,linked:true,credits:3,pending:false};
 const headers={'Access-Control-Allow-Origin':base,'Access-Control-Allow-Headers':'content-type,authorization','Access-Control-Allow-Methods':'POST,OPTIONS'};
 await context.route(api,async route=>{
@@ -17,14 +17,16 @@ await context.route(api,async route=>{
  const p=req.postDataJSON();seen.push(p.action);
  let data,status=200;
  const customer=()=>({activation:approved?'approved':activation,activation_code:'abc123',name:'Testmedlem',credits,mode,order});
- const admin=()=>({site_ready:siteReady,site_origin:siteReady?'https://kontorkaffe.github.io':'',vapid:'',mode,members:[{...member,credits}],orders:order&&['pending','proposed','accepted','preparing','ready'].includes(order.status)?[{...order,name:'Testmedlem'}]:[]});
+ const admin=()=>({site_ready:siteReady,site_origin:siteReady?'https://kontorkaffe.github.io':'',vapid:'',mode,mfa_enabled:mfaEnabled,members:[{...member,credits}],orders:order&&['pending','proposed','accepted','preparing','ready'].includes(order.status)?[{...order,name:'Testmedlem'}]:[]});
  switch(p.action){
  case 'state':assert.equal(p.card,card);assert.match(p.browser,/^[a-f0-9]{64}$/);data=customer();break;
  case 'activate':activation='pending';data=customer();break;
  case 'order':assert.ok(['Espresso','Dagens spesial'].includes(p.drink));assert.ok(p.request_id);assert.equal(p.special_revision,undefined);credits--;order={id:'order-1',drink:p.drink,pickup:p.pickup,status:'pending'};data=customer();break;
  case 'cancel':credits++;order={...order,status:'cancelled'};data=customer();break;
- case 'admin_login':if(failLogin){status=401;data={error:'Feil e-post eller passord'};}else data={access_token:'mock-token'};break;
- case 'admin_state':assert.equal(req.headers().authorization,'Bearer mock-token');data=admin();break;
+ case 'admin_login':if(failLogin){status=401;data={error:'Feil e-post eller passord'};}else {mfaVerified=false;data={access_token:'mock-token',mfa_required:mfaEnabled,factor_id:'mock-factor'};}break;
+ case 'admin_state':assert.equal(req.headers().authorization,'Bearer mock-token');assert.ok(!mfaEnabled||mfaVerified);data=admin();break;
+ case 'admin_mfa_enroll':data={factor_id:'mock-factor',qr:'data:image/png;base64,iVBORw0KGgo=',secret:'MOCKONLY'};break;
+ case 'admin_mfa_verify':assert.equal(p.factor_id,'mock-factor');if(p.code!=='123456'){status=400;data={error:'Feil kode'};}else{mfaEnabled=true;mfaVerified=true;data={access_token:'mock-token'};}break;
  case 'admin_configure':assert.equal(p.origin,'https://kontorkaffe.github.io');siteReady=true;data={ok:true};break;
  case 'admin_rename':assert.equal(p.id,1);member.name=p.name;data={ok:true};break;
  case 'admin_reset_browser':assert.equal(p.id,1);member.linked=false;data={ok:true};break;
@@ -48,9 +50,9 @@ try{
  await page.reload();await contains('#order','Bestillinga er motteken');await page.getByRole('button',{name:'Avbestill'}).click();await contains('#clips','3 / 3');await visible('#form');
  await page.goto(base+'/admin/');await visible('#login');assert.ok(await page.locator('.login-art img').evaluate(i=>i.complete&&i.naturalWidth>0));await page.locator('#email').fill('test@example.invalid');await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await contains('#err','Feil e-post');await hidden('#dashboard');
  failLogin=false;await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await visible('#dashboard');assert.ok(await page.locator('#open').isDisabled());await widthOK();
- await page.locator('[data-tab=settingsPane]').click();await visible('#hostSetup');await page.locator('#hostOrigin').fill('https://kontorkaffe.github.io');await page.locator('#saveHost').click();await visible('#hostReady');await hidden('#hostSetup');
+ await page.locator('[data-tab=settingsPane]').click();await visible('#hostSetup');await page.locator('#hostOrigin').fill('https://kontorkaffe.github.io');await page.locator('#saveHost').click();await visible('#hostReady');await hidden('#hostSetup');await page.locator('#mfaSetup').click();await visible('#mfaPane');await hidden('#dashboard');await page.locator('#mfaCode').fill('000000');await page.locator('#mfaVerify').click();await contains('#err','Feil kode');await page.locator('#mfaCode').fill('123456');await page.locator('#mfaVerify').click();await visible('#dashboard');await page.locator('[data-tab=settingsPane]').click();await contains('#mfaStatus','Tofaktor aktivert');
  await page.locator('#closed').click();await contains('#mode','Stengt');await page.locator('#open').click();await contains('#mode','Ope');
  await page.locator('[data-tab=ordersPane]').click();order={id:'order-ready',drink:'Latte',pickup:new Date(Date.now()-60000).toISOString(),status:'ready'};await page.locator('#refreshNow').click();await contains('#orders','Latte');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Ikkje henta'}).click();await contains('#orders','Ingen aktive bestillingar');await contains('#stockCredits','3');await contains('#stockNeed','3');assert.equal(await page.locator('#specialForm').count(),0);await page.locator('[data-tab=membersPane]').click();await contains('#members','Testmedlem');page.once('dialog',d=>d.accept('Nytt namn'));await page.getByRole('button',{name:'Endra namn'}).click();await contains('#members','Nytt namn');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Ny telefon'}).click();await contains('#members','Ikkje tilknytt');await widthOK();
- await page.setViewportSize({width:1280,height:800});await widthOK();await page.locator('#logout').click();await visible('#login');await hidden('#dashboard');await page.goto(base+'/#'+card);await visible('#form');await contains('#specialChoice','Dagens spesial');await page.locator('#specialChoice').click();await page.locator('#send').click();await contains('#order','Dagens spesial');await contains('#clips','2 / 3');await widthOK();
+ await page.setViewportSize({width:1280,height:800});await widthOK();await page.locator('#logout').click();await visible('#login');await hidden('#dashboard');await page.locator('#email').fill('test@example.invalid');await page.locator('#password').fill('mock-password');await page.locator('#loginButton').click();await visible('#mfaPane');await hidden('#dashboard');await page.locator('#mfaCode').fill('123456');await page.locator('#mfaVerify').click();await visible('#dashboard');await page.locator('#logout').click();await visible('#login');await page.goto(base+'/#'+card);await visible('#form');await contains('#specialChoice','Dagens spesial');await page.locator('#specialChoice').click();await page.locator('#send').click();await contains('#order','Dagens spesial');await contains('#clips','2 / 3');await widthOK();
  assert.deepEqual(failures,[]);console.log('PASS: customer invitation, activation, order, rescan, refund, admin login, host setup, mode, tabs, logout, layout at 360px and 1280px (mock API only).');
 }finally{await browser.close();}
