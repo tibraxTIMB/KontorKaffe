@@ -13,7 +13,7 @@ const dedicatedOrigin='https://kontorkaffe.github.io';
 const baseHeaders={'Access-Control-Allow-Headers':'content-type, authorization','Access-Control-Allow-Methods':'POST, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
 
 const restHeaders={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'};
-const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_special','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push']);
+const allowed=new Set(['admin_configure','admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_rename','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push','admin_push_test']);
 type HostConfig={origin:string,vapid_public:string,vapid_private:string};
 function validOrigin(raw:string){try{const u=new URL(raw);return u.origin===raw&&u.protocol==='https:'&&!u.port&&!u.username&&!u.password&&(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:netlify\.app|pages\.dev|vercel\.app)$/.test(u.hostname)||/^kontorkaffe(?:-[a-z0-9]+)*\.github\.io$/.test(u.hostname));}catch{return false;}}
 async function readConfig():Promise<HostConfig|null>{
@@ -27,7 +27,7 @@ async function notify(config:HostConfig|null){
  const response=await fetch(db+'/rest/v1/kk_push?select=subscription,endpoint',{headers:restHeaders});
  if(!response.ok)return;
  await Promise.all((await response.json()).map(async (row:{endpoint:string,subscription:any})=>{
-  try {await webpush.sendNotification(row.subscription,JSON.stringify({title:'KontorKaffe',body:'Ny kaffibestilling. Opne masterappen.'}),{TTL:300,timeout:5000});}
+  try {await webpush.sendNotification(row.subscription,JSON.stringify({title:'KontorKaffe',body:'Ny kaffibestilling. Opna baristapanelet.'}),{TTL:300,timeout:5000});}
   catch(e:any){if([404,410].includes(e.statusCode))await fetch(db+'/rest/v1/kk_push?endpoint=eq.'+encodeURIComponent(row.endpoint),{method:'DELETE',headers:restHeaders});}
  }));
 }
@@ -86,7 +86,25 @@ Deno.serve(async req=>{
     if(!r.ok)return reply({error:'Adressa kunne ikkje lagrast, eller er allereie lagra.'},409);
     return reply({ok:true,origin:proposed});
    }
-   if(!siteReady&&(action==='admin_issue'||(action==='admin_mode'&&p.mode!=='closed')||action==='admin_push'))return reply({error:'Medlemsnettsida må publiserast på eiga adresse først.'},409);
+   if(!siteReady&&(action==='admin_issue'||(action==='admin_mode'&&p.mode!=='closed')||action==='admin_push'||action==='admin_push_test'))return reply({error:'Medlemsnettsida må publiserast på eiga adresse først.'},409);
+   if(action==='admin_push_test'){
+    if(!config||typeof p.endpoint!=='string'||p.endpoint.length>3000)return reply({error:'Slå på telefonvarsling først.'},400);
+    const r=await fetch(db+'/rest/v1/kk_push?select=subscription,endpoint&endpoint=eq.'+encodeURIComponent(p.endpoint),{headers:restHeaders});
+    if(!r.ok)return reply({error:'Klarte ikkje kontrollera varslingsoppsettet.'},502);
+    const row=(await r.json())[0];
+    if(!row)return reply({error:'Telefonen er ikkje registrert. Slå på varsling på nytt.'},409);
+    webpush.setVapidDetails(config.origin,config.vapid_public,config.vapid_private);
+    try{
+     await webpush.sendNotification(row.subscription,JSON.stringify({title:'KontorKaffe',body:'Testvarsel frå kaffibaren. Varsling er sett opp.'}),{TTL:120,timeout:5000});
+     return reply({ok:true});
+    }catch(e:any){
+     if([404,410].includes(e.statusCode)){
+      await fetch(db+'/rest/v1/kk_push?endpoint=eq.'+encodeURIComponent(row.endpoint),{method:'DELETE',headers:restHeaders});
+      return reply({error:'Varslinga er utløpt. Slå på varsling på nytt.'},409);
+     }
+     return reply({error:'Varslingstenesta tok ikkje imot testvarselet.'},502);
+    }
+   }
    if(action==='admin_issue'){qrToken=random();p.qr_hash=await hash(qrToken);}
    if(action==='admin_push'){
     const sub=p.subscription; const u=new URL(sub.endpoint);
