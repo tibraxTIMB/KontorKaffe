@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test actual Edge Function authorization logic with simulated Auth
+        run: node tests/edge-auth.mjs
       - name: Install pinned browser test runner
         run: |
           npm install --no-save --no-package-lock playwright@1.51.1
