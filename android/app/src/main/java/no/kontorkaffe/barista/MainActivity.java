@@ -1,59 +1,50 @@
 package no.kontorkaffe.barista;
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.Context;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.*;
-import java.net.URI;
+import android.view.WindowManager;
+import android.webkit.*;
+import android.print.PrintAttributes;
+import android.print.PrintManager;
+import java.io.*;
+import java.util.*;
 
-public class MainActivity extends Activity {
- private static final int GREEN=Color.rgb(79,121,57);
- private static final int PAPER=Color.rgb(255,254,250);
- private static final int GOLD=Color.rgb(225,230,222);
- private void styleButton(Button b, boolean primary){android.graphics.drawable.GradientDrawable bg=new android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TL_BR,primary?new int[]{Color.rgb(213,39,40),Color.rgb(166,13,22)}:new int[]{Color.rgb(94,133,67),Color.rgb(67,106,49)});bg.setCornerRadius(14);bg.setStroke(2,GOLD);b.setBackground(bg);b.setTextColor(PAPER);b.setAllCaps(false);b.setMinHeight(56);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,12,0,0);b.setLayoutParams(lp);}
- private SharedPreferences prefs;
- private EditText input;
- private TextView status;
- private String validated(String raw){
-  try {
-   URI u=new URI(raw.trim());
-   if(!"https".equalsIgnoreCase(u.getScheme())||u.getHost()==null||u.getUserInfo()!=null||u.getQuery()!=null||u.getFragment()!=null||u.getPort()!=-1)return null;
-   String host=u.getHost().toLowerCase(java.util.Locale.ROOT);
-   if(host.endsWith(".github.io")||host.equals("github.io")||host.equals("localhost")||host.indexOf('.')<0)return null;
-   String path=u.getPath();
-   if(path==null||path.isEmpty()||path.equals("/")||path.equals("/admin")||path.equals("/admin/"))return "https://"+host+"/admin/";
-   return null;
-  } catch(Exception e){return null;}
+public final class MainActivity extends Activity {
+ private static final String HOST="appassets.androidplatform.net";
+ private static final String START="https://"+HOST+"/kk/admin/index.html";
+ private static final String API="https://rpoziaylvjhfqitfcbhm.supabase.co/functions/v1/kontorkaffe";
+ private static final Set<String> FILES=new HashSet<>(Arrays.asList(
+  "admin/index.html","admin/admin.js","admin/icon.svg","admin/manifest.webmanifest","style.css","common.js","config.js","assets/firenze.svg","assets/marble.svg"));
+ private WebView web;
+ private WebResourceResponse blocked(){return new WebResourceResponse("text/plain","UTF-8",404,"Not Found",Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
+ private String mime(String p){if(p.endsWith(".html"))return "text/html";if(p.endsWith(".js"))return "text/javascript";if(p.endsWith(".css"))return "text/css";if(p.endsWith(".svg"))return "image/svg+xml";return "application/manifest+json";}
+ private boolean localMain(String url){return START.equals(url);}
+ @Override public void onCreate(Bundle b){
+  super.onCreate(b);
+  getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,WindowManager.LayoutParams.FLAG_SECURE);
+  getWindow().setStatusBarColor(Color.rgb(79,121,57));getWindow().setNavigationBarColor(Color.rgb(79,121,57));
+  web=new WebView(this);web.setBackgroundColor(Color.rgb(232,236,228));web.setWebChromeClient(new WebChromeClient());
+  WebView.setWebContentsDebuggingEnabled(false);
+  WebSettings s=web.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);s.setAllowFileAccess(false);s.setAllowContentAccess(false);s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);s.setJavaScriptCanOpenWindowsAutomatically(false);s.setSupportMultipleWindows(false);
+  web.addJavascriptInterface(new PrintBridge(),"KontorKaffeNative");
+  web.setWebViewClient(new WebViewClient(){
+   @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest req){return !req.isForMainFrame()||!localMain(req.getUrl().toString());}
+   @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
+    String url=req.getUrl().toString();if(API.equals(url)&&!req.isForMainFrame())return null;
+    String path=req.getUrl().getPath();
+    if(!"GET".equals(req.getMethod())||!"https".equals(req.getUrl().getScheme())||!HOST.equals(req.getUrl().getHost())||req.getUrl().getPort()!=-1||path==null||!path.startsWith("/kk/"))return blocked();
+    String p=path.substring(4);if(!FILES.contains(p))return blocked();
+    try{return new WebResourceResponse(mime(p),"UTF-8",getAssets().open("kk/"+p));}catch(IOException e){return blocked();}
+   }
+   @Override public void onReceivedSslError(WebView v,SslErrorHandler h,android.net.http.SslError e){h.cancel();}
+  });
+  setContentView(web);
+  web.setOnApplyWindowInsetsListener((v,insets)->{if(android.os.Build.VERSION.SDK_INT>=30){android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.ime());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);}else{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());}return insets;});
+  web.loadUrl(START);
  }
- private void open(String url){
-  try {startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE));}
-  catch(ActivityNotFoundException e){status.setText("Ingen nettlesar funnen.");}
+ private final class PrintBridge{
+  @JavascriptInterface public void printCards(){runOnUiThread(()->{if(web==null||!localMain(web.getUrl()))return;PrintManager pm=(PrintManager)getSystemService(Context.PRINT_SERVICE);if(pm!=null)pm.print("KontorKaffe medlemskort",web.createPrintDocumentAdapter("KontorKaffe medlemskort"),new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).build());});}
  }
- private void saveAndOpen(){
-  String u=validated(input.getText().toString());
-  if(u==null){status.setText("Bruk ei eiga HTTPS-adresse for KontorKaffe, utan ekstra sti eller parameter.");return;}
-  new android.app.AlertDialog.Builder(this).setTitle("Stadfest KontorKaffe-adressa").setMessage("Bruk berre di eiga, publiserte KontorKaffe-adresse.\n\n"+u).setNegativeButton("Avbryt",null).setPositiveButton("Lagre og opne",(d,w)->{prefs.edit().putString("admin_url",u).apply();input.setText(u);status.setText("Adresse lagra.");open(u);}).show();
- }
- @Override public void onCreate(Bundle saved){
-  super.onCreate(saved);
-  prefs=getSharedPreferences("kontorkaffe_launcher",MODE_PRIVATE);
-  getWindow().setStatusBarColor(GREEN);
-  getWindow().setNavigationBarColor(GREEN);
-  LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(32,80,32,32);box.setGravity(Gravity.CENTER_HORIZONTAL);box.setBackgroundColor(GREEN);
-  ImageView icon=new ImageView(this);icon.setImageResource(no.kontorkaffe.barista.R.drawable.ic_coffee);box.addView(icon,new LinearLayout.LayoutParams(160,160));
-  TextView title=new TextView(this);title.setText("KontorKaffe");title.setTextSize(32);title.setTextColor(PAPER);title.setTypeface(android.graphics.Typeface.SERIF);title.setGravity(Gravity.CENTER);box.addView(title);
-  TextView subtitle=new TextView(this);subtitle.setText("Barista · Edizione Firenze · Caffè su invito");subtitle.setTextColor(GOLD);subtitle.setGravity(Gravity.CENTER);box.addView(subtitle);
-  TextView explain=new TextView(this);explain.setText("\nPrivat administratorflate. Opnar den sikre nettappen i nettlesaren, der pushvarsling og utskrift vert handterte. Første gong: legg inn den separate KontorKaffe-adressa.");explain.setTextColor(PAPER);box.addView(explain);
-  input=new EditText(this);input.setSingleLine(true);input.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_URI);input.setTextColor(PAPER);input.setHintTextColor(GOLD);input.setHint("https://di-kontorkaffe-adresse");input.setText(prefs.getString("admin_url",""));box.addView(input,new LinearLayout.LayoutParams(-1,-2));
-  Button button=new Button(this);button.setText("Lagre adresse og opne");button.setOnClickListener(v->saveAndOpen());styleButton(button,true);box.addView(button);
-  Button direct=new Button(this);direct.setText("Opne masterappen");direct.setOnClickListener(v->{String u=validated(prefs.getString("admin_url",""));if(u==null)status.setText("KontorKaffe må publiserast og adressa lagrast først.");else open(u);});styleButton(direct,false);box.addView(direct);
-  Button clear=new Button(this);clear.setText("Gløym lagra adresse");clear.setOnClickListener(v->{prefs.edit().remove("admin_url").apply();input.setText("");status.setText("Adresse fjerna.");});styleButton(clear,false);box.addView(clear);
-  status=new TextView(this);status.setTextColor(PAPER);box.addView(status);
-  ScrollView scroll=new ScrollView(this);scroll.addView(box);setContentView(scroll);
- }
+ @Override protected void onDestroy(){if(web!=null){web.removeJavascriptInterface("KontorKaffeNative");web.destroy();web=null;}super.onDestroy();}
 }
