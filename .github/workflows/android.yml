@@ -27,16 +27,17 @@ jobs:
         run: |
           test -s android/app/build/outputs/apk/debug/app-debug.apk
           unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep 'assets/kk/admin/index.html'
-          unzip -p android/app/build/outputs/apk/debug/app-debug.apk assets/kk/admin/index.html | grep 'Verde Linea · 1.5'
+          unzip -p android/app/build/outputs/apk/debug/app-debug.apk assets/kk/admin/index.html | grep 'BARISTA<br>1.6'
+          unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep 'assets/kk/admin/barista.css'
           node --input-type=module --check < site/admin/admin.js
           SDK_TOOL=$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)
-          "$SDK_TOOL" dump badging android/app/build/outputs/apk/debug/app-debug.apk | grep "versionName='1.5'"
+          "$SDK_TOOL" dump badging android/app/build/outputs/apk/debug/app-debug.apk | grep "versionName='1.6'"
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/KontorKaffe-Barista-1.5-test.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/KontorKaffe-Barista-1.6-test.apk
           sha256sum dist/*.apk > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: KontorKaffe-Barista-1.5-test
+          name: KontorKaffe-Barista-1.6-test
           path: dist/
           if-no-files-found: error
           retention-days: 30

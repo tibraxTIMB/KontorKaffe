@@ -5,7 +5,7 @@ const origin = env('KK_SITE_ORIGIN');
 const site = env('KK_SITE_URL').replace(/\/$/,'');
 const db = env('SUPABASE_URL');
 const secret = env('SUPABASE_SERVICE_ROLE_KEY');
-const admin = env('KK_ADMIN_KEY');
+const authKey=env('SUPABASE_ANON_KEY');
 const hash = async (s: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
 const random = () => Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
 const keyValid = (s: unknown): s is string => typeof s==='string' && /^[a-f0-9]{64}$/.test(s);
@@ -15,7 +15,7 @@ const siteReady=(()=>{try{const u=new URL(site);return u.protocol==='https:'&&u.
 const baseHeaders={'Access-Control-Allow-Headers':'content-type, authorization','Access-Control-Allow-Methods':'POST, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin'};
 
 const restHeaders={apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'};
-const allowed=new Set(['state','activate','order','accept','cancel','admin_state','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push']);
+const allowed=new Set(['admin_login','admin_logout','state','activate','order','accept','cancel','admin_state','admin_mode','admin_issue','admin_approve','admin_renew','admin_block','admin_order','admin_push']);
 async function notify(){
  if(!env('KK_VAPID_PUBLIC')||!env('KK_VAPID_PRIVATE'))return;
  webpush.setVapidDetails(env('KK_VAPID_SUBJECT'),env('KK_VAPID_PUBLIC'),env('KK_VAPID_PRIVATE'));
@@ -35,15 +35,33 @@ Deno.serve(async req=>{
  if(!trusted)return reply({error:'Ikkje tillate'},403);
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
  if(req.method!=='POST')return reply({error:'Ikkje tillate'},405);
- if(!secret||!keyValid(admin))return reply({error:'Administrasjonsnøkkel må konfigurerast i KontorKaffe sin Supabase først.'},503);
+ if(!secret||!authKey)return reply({error:'Servertilkopling manglar'},503);
  try{
   const raw=await req.text(); if(raw.length>12000)return reply({error:'For stor førespurnad'},413);
   const {action,...p}=JSON.parse(raw); if(!allowed.has(action))return reply({error:'Ukjend handling'},400);
   if(native&&!action.startsWith('admin_'))return reply({error:'Ikkje tillate'},403);
+  const authHeaders={apikey:authKey,'Content-Type':'application/json'};
+  const checkAdmin=async(token:string)=>{
+   if(!token||token.length>8000)return false;
+   const response=await fetch(db+'/auth/v1/user',{headers:{...authHeaders,Authorization:'Bearer '+token}});
+   if(!response.ok)return false;
+   const user=await response.json();
+   return user.app_metadata?.kontorkaffe_admin===true && !!user.id;
+  };
+  if(action==='admin_login'){
+   if(typeof p.email!=='string'||typeof p.password!=='string'||p.email.length>254||p.password.length>256)return reply({error:'Feil e-post eller passord'},401);
+   const response=await fetch(db+'/auth/v1/token?grant_type=password',{method:'POST',headers:authHeaders,body:JSON.stringify({email:p.email,password:p.password})});
+   if(!response.ok)return reply({error:'Feil e-post eller passord'},response.status===429?429:401);
+   const session=await response.json();
+   if(!await checkAdmin(session.access_token))return reply({error:'Ingen administratortilgang'},403);
+   return reply({access_token:session.access_token,expires_in:session.expires_in});
+  }
   let qrToken='';
   if(action.startsWith('admin_')){
    const auth=req.headers.get('authorization')||'';
-   if(!await same(auth,'Bearer '+admin))return reply({error:'Feil administratortilgang'},401);
+   const token=auth.startsWith('Bearer ')?auth.slice(7):'';
+   if(!await checkAdmin(token))return reply({error:'Logg inn på nytt med administratorkontoen'},401);
+   if(action==='admin_logout'){await fetch(db+'/auth/v1/logout',{method:'POST',headers:{...authHeaders,Authorization:'Bearer '+token}});return reply({ok:true});}
    if(!siteReady&&(action==='admin_issue'||(action==='admin_mode'&&p.mode!=='closed')||action==='admin_push'))return reply({error:'Medlemsnettsida må publiserast på eiga adresse først.'},409);
    if(action==='admin_issue'){qrToken=random();p.qr_hash=await hash(qrToken);}
    if(action==='admin_push'){

@@ -6,7 +6,7 @@ export async function api(action,p={},key=''){
  if(!API)throw Error('KontorKaffe er ikkje kopla til databasen enno.');
  const headers={'Content-Type':'application/json'};if(key)headers.Authorization='Bearer '+key;
  const r=await fetch(API,{method:'POST',headers,body:JSON.stringify({action,...p}),cache:'no-store',referrerPolicy:'no-referrer'});
- const d=await r.json();if(!r.ok||d.error)throw Error(d.error||'Nettverksfeil');return d;
+ const d=await r.json();if(!r.ok||d.error){const e=Error(d.error||'Nettverksfeil');e.status=r.status;throw e;}return d;
 }
 export const time=t=>new Date(t).toLocaleString('nn-NO',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
 export const dateInput=(t=new Date(Date.now()+10*60000))=>{const d=new Date(t);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);};

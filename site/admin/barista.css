@@ -1,0 +1,48 @@
+/* Private barista console — Verde Linea 1.6. */
+.barista{background:#e7ebe3;color:#203322}
+.barista main{max-width:920px;padding:14px 14px 32px}
+.barista .mast{display:flex;align-items:center;text-align:left;gap:12px;padding:13px 16px;background:linear-gradient(145deg,#668b4c,#4f7939);border:1px solid #a4b79a;box-shadow:0 4px 14px #253b2420;border-radius:12px}
+.barista .mast:before,.barista .mast:after{display:none}
+.mast img{flex:none;border:1px solid #f4f3ef;border-radius:11px}
+.wordmark{flex:1;min-width:0}
+.barista .wordmark h1{font:400 clamp(24px,5.5vw,35px)/1.05 Georgia,serif;letter-spacing:-.05em;color:white}
+.barista .wordmark p{font:italic 13px Georgia,serif;margin:3px 0 0;color:#f9f8f4}
+.edition-mark{font:650 10px/1.45 system-ui,sans-serif;letter-spacing:.13em;text-align:right;color:white;flex:none}
+.barista section{border-radius:14px;background:#fffefa;border:1px solid #c7d0bf;padding:16px}
+.barista .login-card{padding:0;overflow:hidden;max-width:470px;margin:18px auto;background:#fffefa url('../assets/marble.svg') center/cover}
+.login-art{position:relative;height:132px;background:#4f7939;overflow:hidden;border-bottom:3px solid #b7c1b2}
+.login-art img{width:100%;height:100%;object-fit:cover}
+.login-art span{position:absolute;bottom:9px;right:10px;background:#294b27;color:white;font:600 10px system-ui;letter-spacing:.15em;padding:6px 8px;border-radius:4px}
+.login-content{padding:22px}
+.barista .eyebrow{font:700 10px/1.4 system-ui,sans-serif;letter-spacing:.17em;color:#526b45;margin:0 0 5px}
+.barista h2{font:400 27px/1.12 Georgia,serif;color:#294b27;margin:0 0 6px}
+.barista .login-content .muted{margin:6px 0 16px}
+.barista label{font-size:13px;margin:13px 0 5px}
+.barista input{background:#fff;border:1px solid #a5b29d;color:#203322;min-height:48px}
+.barista button.full{background:linear-gradient(155deg,#d82b2b,#b5121d);border:1px solid #941820;color:#fff;font:650 16px system-ui;min-height:50px;border-radius:8px}
+.barista .bar-controls{margin-bottom:12px;background:#fdfcf8 url('../assets/marble.svg') center/cover}
+.barista .logout{font-size:12px;min-height:36px;padding:6px 12px}
+.switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#e4e9de;border:1px solid #c1cdb9;padding:4px;border-radius:9px;margin-top:14px}
+.barista .switch button{border:0;box-shadow:none;background:transparent;color:#294b27;font-size:13px;min-height:41px;padding:7px 3px}
+.barista .switch button:disabled{background:#4f7939;color:#fff;opacity:1}
+.barista #mode{font-size:12px;font-weight:600;border:0;margin:8px 0 0;padding:0}
+.notice{font-size:12px;border-left:3px solid #b48324;padding:8px;margin-top:12px;background:#f6f0e3;color:#5c4922}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.metrics div{background:#fffefa url('../assets/marble.svg') center/cover;border:1px solid #c7d0bf;border-radius:10px;padding:12px 8px;min-width:0}
+.metrics span{display:block;font-size:11px;color:#52624b;overflow-wrap:anywhere}
+.metrics strong{display:block;font:400 clamp(22px,6vw,32px)/1.2 Georgia,serif;color:#365d2c;margin-top:4px}
+.worktabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:#4f7939;border:1px solid #456934;padding:5px;border-radius:10px;margin-top:15px}
+.barista .worktabs button{min-height:44px;font-size:clamp(10px,2.8vw,13px);padding:4px 2px;box-shadow:none;background:transparent;border:0;color:#fff;white-space:normal;overflow-wrap:anywhere}
+.barista .worktabs button[aria-pressed=true]{color:#294b27;background:#fffefa}
+.barista .workspace{margin-top:10px;min-height:150px}
+.section-head{border-bottom:1px solid #c9d2c2;padding-bottom:12px;margin-bottom:12px}
+.barista .panel{background:#f7f9f4;border:1px solid #c9d3c2;box-shadow:none;padding:14px}
+.barista .member{padding:14px 0}
+.barista .member button{font-size:12px;min-height:40px}
+.barista .empty-state{background:#f0f4ec;border:1px dashed #a8b99d;border-radius:10px;padding:24px 12px;text-align:center;color:#526b45}
+.barista .error{border-left:3px solid #b5121d;background:#fff4f2;padding:10px;border-radius:4px;font-size:13px}
+.barista .error:empty{display:none}
+.barista .club-footer{font:italic 12px Georgia,serif;letter-spacing:.06em}
+@media(max-width:360px){.barista main{padding:9px}.login-content{padding:16px}.barista .mast{padding:10px;gap:8px}.mast img{width:40px;height:40px}.barista .worktabs button{font-size:10px}}
+@media(min-width:780px){.barista main{padding:24px}.barista .login-card{max-width:500px}.login-art{height:175px}.metrics div{padding:17px}.barista .workspace{padding:22px}}
+@media print{.barista main{max-width:none;padding:0}.barista #printArea{display:grid!important}}
