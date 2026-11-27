@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 import assert from 'node:assert/strict';
 const source=readFileSync(new URL('../supabase/functions/kontorkaffe/index.ts',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
-let handler,verified=false,rpcCalls=0,deleted=0;
+let handler,verified=false,rpcCalls=0,deleted=0,watchHash='';
 const factor='11111111-1111-4111-8111-111111111111';
 const origin='https://kontorkaffe.github.io';
 const token=level=>'mock.'+Buffer.from(JSON.stringify({aal:level})).toString('base64url')+'.mock';
@@ -16,6 +16,13 @@ const mockFetch=async (url,opts={})=>{
  if(path==='/auth/v1/factors'&&opts.method==='POST'){assert.equal(b.factor_type,'totp');return json({id:factor,totp:{uri:'otpauth://mock',secret:'MOCK'}});}
  if(path==='/auth/v1/factors/'+factor+'/challenge')return json({id:'challenge'});
  if(path==='/auth/v1/factors/'+factor+'/verify'){assert.equal(b.challenge_id,'challenge');if(b.code!=='123456')return json({},400);verified=true;return json({access_token:token('aal2'),expires_in:3600});}
+ if(path==='/rest/v1/rpc/kk_watch'){
+  assert.match(b.p.session_hash,/^[a-f0-9]{64}$/);
+  if(b.a==='start'){watchHash=b.p.session_hash;return json({ok:true});}
+  if(b.a==='native_watch_stop'){if(watchHash===b.p.session_hash)watchHash='';return json({ok:true});}
+  if(b.a==='native_watch_state')return json(watchHash&&watchHash===b.p.session_hash?{mode:'open',pending:['mock-order']}:{expired:true});
+  throw Error('Unexpected watch action');
+ }
  if(path==='/rest/v1/rpc/kk_action'){rpcCalls++;return json({ok:true});}
  if(path==='/rest/v1/kk_push'&&opts.method==='DELETE'){deleted++;assert.equal(u.searchParams.get('endpoint'),'eq.https://fcm.googleapis.com/mock');return json({});}
  if(path==='/auth/v1/logout')return json({});
@@ -39,3 +46,15 @@ assert.equal((await request('admin_mfa_enroll',{},token('aal2'))).status,409);
 assert.equal((await request('admin_state',{},token('aal2'))).data.mfa_enabled,true);
 assert.equal((await request('admin_push_off',{endpoint:'https://fcm.googleapis.com/mock'},token('aal2'))).status,200);assert.equal(deleted,1);
 console.log('PASS: actual edge authorization, TOTP enrollment/verification, AAL2 gate, origin rejection and push removal with mocked Auth and DB');
+
+const native='https://appassets.androidplatform.net';
+assert.equal((await request('admin_watch_start',{},'',native)).status,401);
+assert.equal((await request('admin_watch_start',{},token('aal1'),native)).status,428);
+assert.equal((await request('admin_watch_start',{},token('aal2'),origin)).status,403);
+const watch=await request('admin_watch_start',{},token('aal2'),native);assert.equal(watch.status,200);assert.match(watch.data.session,/^[a-f0-9]{64}$/);assert.notEqual(watch.data.session,watchHash);
+assert.equal((await request('native_watch_state',{session:watch.data.session},'',origin)).status,403);
+assert.equal((await request('native_watch_state',{session:'a'.repeat(64)},'',native)).status,410);
+assert.deepEqual((await request('native_watch_state',{session:watch.data.session},'',native)).data,{mode:'open',pending:['mock-order']});
+assert.equal((await request('native_watch_stop',{session:watch.data.session},'',native)).status,200);
+assert.equal((await request('native_watch_state',{session:watch.data.session},'',native)).status,410);
+console.log('PASS: watch session is native-only, admin/MFA-gated, read-only, hashed and revocable');
